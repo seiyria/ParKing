@@ -25,12 +25,13 @@ export class VariantMenu extends Menu {
     this.titleText = new PIXI.Text('Variants', titleOpts);
     this.addChild(this.titleText);
 
-    // const variantSelectList = ;
+    // yes/no/random variants
     const allYesNoRandomVariants = [
       'Snow', 'RandomParking', 'RoadCones', 'NoBrakes',
       'CarWash', 'Lakeside', 'Bombs', 'FreeMoney', 'Obstacles'
     ];
 
+    // 0/1/2/3/4 variants
     const allZeroToFourVariants = [
       'VIPSpaces', 'HandicapSpaces'
     ];
