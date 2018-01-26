@@ -6,6 +6,7 @@ import { ConfigManager } from './config';
 import { isKeyDown, setKey, unsetKey } from './key';
 import { GameState } from './gamestate';
 import { MainMenu } from '../menus/MainMenu';
+import { Bomb } from '../actors/Bomb';
 
 const mt = Random.engines.mt19937();
 mt.autoSeed();
@@ -25,6 +26,7 @@ export class World {
   private static lastMenuTime = 0;
 
   private static _renderer;
+  private static _manager;
 
   public static get renderer() {
     return World._renderer;
@@ -58,6 +60,14 @@ export class World {
     World._renderer = PIXI.autoDetectRenderer(ConfigManager.WIDTH, ConfigManager.HEIGHT);
     World._stage = new PIXI.Container();
     World._container = new PIXI.Container();
+
+    World._manager = new PIXI.interaction.InteractionManager(World.renderer);
+    World._manager.on('mousedown', (e) => {
+      console.log(e);
+      if(GameState.state.playing) {
+        new Bomb({ x: e.data.originalEvent.offsetX, y: -e.data.originalEvent.offsetY });
+      }
+    });
 
     World._stage.addChild(World._container);
 

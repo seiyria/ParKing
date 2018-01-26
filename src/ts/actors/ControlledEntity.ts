@@ -73,15 +73,15 @@ export abstract class ControlledEntity extends Entity {
       localPosition: [0, -0.5]
     });
 
-    this.setSideFriction(200, 200);
+    this.setSideFriction(150, 150);
 
     this.vehicle.addToWorld(World.p2world);
 
     this.wheelSprites = [];
     for(let i = 0; i < opts.wheelPositions.length; i++) {
       this.wheelSprites[i] = new PIXI.Sprite(opts.wheelTexture);
-      this.wheelSprites[i].scale.x = 0.016;
-      this.wheelSprites[i].scale.y = 0.016;
+      this.wheelSprites[i].scale.x = 0.16;
+      this.wheelSprites[i].scale.y = 0.16;
       this.wheelSprites[i].anchor.x = 1;
       this.wheelSprites[i].anchor.x = 0.5;
       this.wheelSprites[i].position = opts.wheelPositions[i];
@@ -90,6 +90,7 @@ export abstract class ControlledEntity extends Entity {
 
     this.sprite = new PIXI.Sprite(opts.texture);
     this.graphics.addChild(this.sprite);
+
     this.sprite.width = -this.box.width;
     this.sprite.height = -this.box.height;
     this.sprite.position.x = -this.box.width / 2;
@@ -106,8 +107,8 @@ export abstract class ControlledEntity extends Entity {
     this.backWheel.setBrakeForce(0);
 
     if(isKeyDown('Brake', this.myPlayer)) {
-      if(this.backWheel.getSpeed() > 0.1) {
-        // Moving forward - add some brake force to slow down
+      // Moving forward - add some brake force to slow down
+      if(this.backWheel.getSpeed() > 0) {
         this.backWheel.setBrakeForce(2);
       }
     }

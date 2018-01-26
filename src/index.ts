@@ -4,24 +4,13 @@ import * as WebFont from 'webfontloader';
 
 import { World } from './ts/global/world';
 import { GameState } from './ts/global/gamestate';
-import { Bomb } from './ts/actors/Bomb';
 import { MainMenu } from './ts/menus/MainMenu';
 
 import './index.css';
 
 class Game {
 
-  static debugTests() {
-    World.renderer.onclick = e => {
-      if(GameState.state.playing) {
-        new Bomb({ x: e.offsetX, y: -e.offsetY });
-      }
-    };
-  }
-
   static init() {
-    Game.debugTests();
-
     World.renderer.backgroundColor = 0x040404;
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 

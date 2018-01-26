@@ -3,6 +3,7 @@ import * as Lockr from 'lockr';
 import * as _ from 'lodash';
 
 type YesNoRandom = 'Yes' | 'No' | 'Random';
+type ZeroToFour = 0 | 1 | 2 | 3 | 4;
 
 class Variants {
   Snow: YesNoRandom = 'Random';                 // snow on the ground
@@ -13,7 +14,9 @@ class Variants {
   Lakeside: YesNoRandom = 'Random';             // lakeside map
   Bombs: YesNoRandom = 'Random';                // explosions in map
   FreeMoney: YesNoRandom = 'Random';            // free money on map
-  Obstacles: YesNoRandom = 'Random';            // pre-spawned cars on map
+  Obstacles: YesNoRandom = 'Random';            // pre-spawned cars on map,
+  VIPSpaces: ZeroToFour = 1;                    // number of VIP spaces on the map
+  HandicapSpaces: ZeroToFour = 1;               // number of Handicap spaces on the map
 }
 
 const OPTION_PADDING_RIGHT = 15;
@@ -73,11 +76,11 @@ export class VariantManager {
     return this.formatOptionText(_.startCase(key), val, true, true);
   }
 
-  public static getKey(key: string): YesNoRandom {
+  public static getKey(key: string): any {
     return this.options[key];
   }
 
-  public static setKey(key: string, val: YesNoRandom) {
+  public static setKey(key: string, val: YesNoRandom): void {
     this.setOption(key, val);
   }
 }

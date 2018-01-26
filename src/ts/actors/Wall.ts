@@ -23,11 +23,6 @@ export class Wall extends Entity {
     this.box.collisionMask = ConfigManager.collisionMasks.PLAYER | ConfigManager.collisionMasks.CAR | ConfigManager.collisionMasks.TRUCKBACK;
 
     this.body.addShape(this.box);
-
-    this.graphics.beginFill(0xFFFF00);
-    this.graphics.drawRect(-this.box.width / 2, -this.box.height / 2, this.box.width, this.box.height);
-    this.graphics.position.x = this.body.position[0];
-    this.graphics.position.y = this.body.position[1];
   }
 
   load() {}
@@ -39,6 +34,10 @@ export class Wall extends Entity {
       return;
     }
 
+    this.graphics.beginFill(0xFFFF00);
+    this.graphics.drawRect(-this.box.width / 2, -this.box.height / 2, this.box.width, this.box.height);
+    this.graphics.position.x = this.body.position[0];
+    this.graphics.position.y = this.body.position[1];
     World.container.addChild(this.graphics);
   }
 }

@@ -45,8 +45,8 @@ export class BasicArena extends GameLevel {
     const psprite = new PIXI.Sprite(ResourceManager.getResource('parking-outline'));
     const psOffsetX = psprite.width / 1.76; // OC: MAGIC NUMBER DO NOT TOUCH
 
-    const TOP_ROW_Y = -105;
-    const BOTTOM_ROW_Y = -230;
+    const TOP_ROW_Y = -110;
+    const BOTTOM_ROW_Y = -225;
 
     for (let i = 0; i < 10; i++) {
 

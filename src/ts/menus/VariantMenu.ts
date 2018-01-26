@@ -1,11 +1,11 @@
 
+import * as _ from 'lodash';
+
 import { ACCUMULATOR_THRESHOLD, Menu } from './Menu';
 import { World } from '../global/world';
 import { GameState } from '../global/gamestate';
 import { VariantManager } from '../global/variant';
 
-import * as GameModes from '../gamemodes';
-import * as GameLevels from '../gamelevels';
 import { isKeyDown } from '../global/key';
 import { ConfigManager } from '../global/config';
 import { Helpers } from '../global/helpers';
@@ -25,15 +25,19 @@ export class VariantMenu extends Menu {
     this.titleText = new PIXI.Text('Variants', titleOpts);
     this.addChild(this.titleText);
 
-    const variantSelectList = ['Random', 'No', 'Yes'];
-    const allVariants = [
+    // const variantSelectList = ;
+    const allYesNoRandomVariants = [
       'Snow', 'RandomParking', 'RoadCones', 'NoBrakes',
       'CarWash', 'Lakeside', 'Bombs', 'FreeMoney', 'Obstacles'
     ];
 
-    allVariants.forEach(variant => {
+    const allZeroToFourVariants = [
+      'VIPSpaces', 'HandicapSpaces'
+    ];
 
-      this.addOption(VariantManager.keyDisplay(variant), {
+    const createOption = (variantKey: string, options: string[]|number[]) => {
+
+      this.addOption(VariantManager.keyDisplay(variantKey), {
         state: { accumulator: 0 },
         update: (now, delta, state) => {
 
@@ -42,22 +46,29 @@ export class VariantMenu extends Menu {
           if(state.accumulator < ACCUMULATOR_THRESHOLD) return;
           state.accumulator = 0;
 
-          let resIdx = variantSelectList.indexOf(VariantManager.getKey(variant));
+          let resIdx = _.indexOf(options, VariantManager.getKey(variantKey));
           if(resIdx === -1) resIdx = 0;
 
           if(isKeyDown('Left')) {
-            const newIdx = resIdx - 1 === -1 ? variantSelectList.length - 1 : resIdx - 1;
-            VariantManager.setKey(variant, (<any>variantSelectList)[newIdx]);
-            state.opt.textObj.text = VariantManager.keyDisplay(variant);
+            const newIdx = resIdx - 1 === -1 ? options.length - 1 : resIdx - 1;
+            VariantManager.setKey(variantKey, (<any>options)[newIdx]);
+            state.opt.textObj.text = VariantManager.keyDisplay(variantKey);
           }
 
           if(isKeyDown('Right')) {
-            const newIdx = resIdx + 1 === variantSelectList.length ? 0 : resIdx + 1;
-            VariantManager.setKey(variant, (<any>variantSelectList)[newIdx]);
-            state.opt.textObj.text = VariantManager.keyDisplay(variant);
+            const newIdx = resIdx + 1 === options.length ? 0 : resIdx + 1;
+            VariantManager.setKey(variantKey, (<any>options)[newIdx]);
+            state.opt.textObj.text = VariantManager.keyDisplay(variantKey);
           }
         }});
+    };
 
+    allYesNoRandomVariants.forEach(variant => {
+      createOption(variant, ['Random', 'No', 'Yes']);
+    });
+
+    allZeroToFourVariants.forEach(variant => {
+      createOption(variant, [0, 1, 2, 3, 4]);
     });
 
     this.addOption('Back', { callback: () => {

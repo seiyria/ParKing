@@ -33,15 +33,12 @@ export class GameLevel {
     this.texture.position.y = -ConfigManager.numBasedOnZoom(ConfigManager.HEIGHT);
     this.texture.scale.x = ConfigManager.scaleXAndZoom(1);
     this.texture.scale.y = ConfigManager.scaleYAndZoom(0.565);
+
     this.graphics.addChild(this.texture);
     World.container.addChild(this.graphics);
 
-    this.walls.forEach(wall => {
-      wall.load();
-    });
-    this.parkingSpaces.forEach(space => {
-      space.load();
-    });
+    this.walls.forEach(wall => wall.load());
+    this.parkingSpaces.forEach(space => space.load());
   }
 
   public unload() {
