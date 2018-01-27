@@ -36,8 +36,7 @@
     "html-webpack-plugin": "^2.30.1",
     "lockr": "^0.8.4",
     "lodash": "^4.17.4",
-    "p2": "^0.7.1",
-    "pixi.js": "^4.7.0",
+    "phaser-ce": "^2.10.0",
     "random-js": "^1.0.8",
     "webfontloader": "^1.6.28",
     "weighted": "^0.3.0"
