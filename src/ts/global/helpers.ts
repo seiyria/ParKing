@@ -1,8 +1,6 @@
 
-import { ConfigManager } from './config';
-
 export class Helpers {
-  public static defaultTextOptions(): PIXI.TextStyleOptions {
-    return { fontFamily: 'Game', fontSize: ConfigManager.scaleX(24), fill: 0xFFFFFF, align: 'left' };
+  public static defaultTextOptions(): Phaser.PhaserTextStyle {
+    return { font: 'Game', fontSize: 24, fill: 0xFFFFFF, align: 'left' };
   }
 }

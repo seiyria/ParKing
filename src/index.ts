@@ -9,17 +9,17 @@ import { World } from './ts/global/world';
 import { GameState } from './ts/global/gamestate';
 import { MainMenu } from './ts/menus/MainMenu';
 
-import './index.css';
-
 import { Boot } from './ts/states/boot';
+
+import './index.css';
 
 class Game extends Phaser.Game {
   constructor(config) {
     super(config);
 
-    this.state.add('boot', Boot);
+    this.state.add('Boot', Boot);
 
-    this.state.start('boot');
+    this.state.start('Boot');
   }
 }
 
@@ -34,13 +34,9 @@ const fontPromise = new Promise(resolve => {
   });
 });
 
-const pixiPromise = new Promise(resolve => {
-  PIXI.loader.once('complete', resolve);
-});
-
 export let game: Game;
 
-Promise.all([fontPromise, pixiPromise])
+Promise.all([fontPromise])
   .then(() => {
     game = new Game({
       width: '100%',

@@ -1,8 +1,5 @@
 
-import * as PIXI from 'pixi.js';
-
 export class ResourceManager {
-  private static defaultLoader = PIXI.loader;
   private static rootPath = '../../assets';
 
   private static resources: any;
@@ -28,7 +25,9 @@ export class ResourceManager {
 
   private static uiSprites = [
     'default',
-    'menu-arrow'
+    'menu-arrow',
+    'preload_bar',
+    'preload_frame'
   ];
 
   private static levels = [
@@ -45,6 +44,7 @@ export class ResourceManager {
     return ResourceManager.resources[resource].texture;
   }
 
+  /*
   static init() {
     ResourceManager.carSprites.forEach(    sprite => ResourceManager.defaultLoader.add(`car-${sprite}`,
       `${ResourceManager.rootPath}/game/vehicles/car-${sprite}.png`));
@@ -59,12 +59,10 @@ export class ResourceManager {
 
     ResourceManager.load();
   }
+  */
 
-  private static load() {
-    ResourceManager.resources = ResourceManager.defaultLoader
-      .load()
-      .resources;
+  static get UISprites() {
+    return ResourceManager.uiSprites.map(sprite => ({ name: sprite, path: `${ResourceManager.rootPath}/ui/${sprite}.png` }));
   }
-}
 
-ResourceManager.init();
+}
