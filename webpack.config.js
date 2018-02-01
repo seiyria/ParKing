@@ -10,10 +10,18 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.json$/,
+        exclude: /node_modules/,
+        use: 'json-loader'
+      },
+      {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: 'awesome-typescript-loader'
       },
+      { test: /pixi\.js$/, loader: 'expose-loader?PIXI' },
+      { test: /phaser-split\.js$/, loader: 'expose-loader?Phaser' },
+      { test: /p2\.js$/, loader: 'expose-loader?p2' },
       {
         test: /\.css$/,
         use: ExtractTextPlugin.extract({

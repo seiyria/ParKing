@@ -1,20 +1,11 @@
 
-import * as p2 from 'p2';
-
 import { Entity } from './Entity';
 import { Explosion } from './Explosion';
 import { ConfigManager } from '../global/config';
 
 export class Bomb extends Entity {
 
-  constructor({ x, y }) {
-    super({
-      x, y,
-      mass: 0
-    });
-  }
-
-  protected init() {
+    /*
     const circle = new p2.Circle({ radius: 1 });
     circle.collisionGroup = ConfigManager.collisionMasks.BOMB;
     circle.collisionMask = ConfigManager.collisionMasks.PLAYER | ConfigManager.collisionMasks.CAR;
@@ -31,6 +22,6 @@ export class Bomb extends Entity {
       const explosion = new Explosion(this.graphics.position, 8, 2);
       explosion.explode();
     }
-  }
+    */
 
 }

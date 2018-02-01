@@ -1,55 +1,47 @@
 
 import * as _ from 'lodash';
-import * as p2 from 'p2';
 
 import { Entity } from './Entity';
-import { World } from '../global/world';
 import { ConfigManager } from '../global/config';
-import { isKeyDown } from '../global/key';
 import { ResourceManager } from '../global/resources';
-
-const overrideDefaults = {
-  angle: -1.5708
-};
+import { GameState } from '../global/gamestate';
+import { KeyMapHandler } from '../global/key';
 
 export abstract class ControlledEntity extends Entity {
 
   private myPlayer: number;
 
+  /*
   protected vehicle: any;     // p2.TopDownVehicle
   protected frontWheel: any;  // p2.WheelConstraint;
   protected backWheel: any;   // p2.WheelConstraint;
+  */
 
-  protected wheelSprites: PIXI.Sprite[];
+  protected wheelSprites: Phaser.Group;
 
   protected maxSteer: number;
+  protected wheelRotationSpeed: number;
 
-  constructor(opts) {
-    super(_.defaults(opts, overrideDefaults));
-  }
+  private isHalted: boolean;
 
-  init(opts) {
-    opts.w = opts.w || 0.5;
-    opts.h = opts.h || 0.875;
-    opts.maxSteer = opts.maxSteer || 20000;
-    opts.wheelTexture = opts.wheelTexture || ResourceManager.getResource('car-wheel');
+  create(opts) {
+    super.create(opts);
+
     opts.wheelPositions = opts.wheelPositions || [
-      [-0.22,       0.24],
-      [0.4 - 0.098, 0.24],
-      [-0.22,       -0.3],
-      [0.4 - 0.098, -0.3]
+      [-(this.width / 2) - 5, -this.height / 2],
+      [(this.width / 2),      -this.height / 2],
+      [-(this.width / 2) - 5, (this.height / 2) - 10],
+      [(this.width / 2),      (this.height / 2) - 10]
     ];
 
-    if(!opts.texture) {
-      throw new Error('Car initialized with no texture');
-    }
+    if(!this.wheelRotationSpeed) this.wheelRotationSpeed = 300;
+    if(!this.maxSteer) this.maxSteer = 100;
+    if(!this.body.mass) this.body.mass = 1;
 
-    this.maxSteer = opts.maxSteer;
-    this.myPlayer = opts.player;
-
+    /*
     (<any>this.body).onCollision = (body) => {
       this.setSideFriction(3, 3);
-      World.screenShake(3, 3);
+      GameState.screenShake(3, 3);
 
       if(body.shapes[0].collisionGroup === ConfigManager.collisionMasks.WALL) {
         setTimeout(() => {
@@ -65,62 +57,65 @@ export abstract class ControlledEntity extends Entity {
     this.body.addShape(this.box);
 
     this.vehicle = new (<any>p2).TopDownVehicle(this.body);
-
-    this.frontWheel = this.vehicle.addWheel({
-      localPosition: [0, 0.5]
-    });
-    this.backWheel = this.vehicle.addWheel({
-      localPosition: [0, -0.5]
-    });
+     */
 
     this.setSideFriction(150, 150);
 
-    this.vehicle.addToWorld(World.p2world);
+    this.wheelSprites = this.game.add.group(this);
 
-    this.wheelSprites = [];
     for(let i = 0; i < opts.wheelPositions.length; i++) {
-      this.wheelSprites[i] = new PIXI.Sprite(opts.wheelTexture);
-      this.wheelSprites[i].scale.x = 0.16;
-      this.wheelSprites[i].scale.y = 0.16;
-      this.wheelSprites[i].anchor.x = 1;
-      this.wheelSprites[i].anchor.x = 0.5;
-      this.wheelSprites[i].position = opts.wheelPositions[i];
-      this.graphics.addChild(this.wheelSprites[i]);
+      const [x, y] = opts.wheelPositions[i];
+      const wheelSprite = this.game.make.sprite(x, y, 'car-wheel');
+
+      this.game.physics.p2.enable(wheelSprite);
+      // this.game.physics.p2.createRevoluteConstraint(this.body, [x, y], wheelSprite.body, [0, 0], this.maxSteer);
+      this.wheelSprites.addChild(wheelSprite);
     }
-
-    this.sprite = new PIXI.Sprite(opts.texture);
-    this.graphics.addChild(this.sprite);
-
-    this.sprite.width = -this.box.width;
-    this.sprite.height = -this.box.height;
-    this.sprite.position.x = -this.box.width / 2;
-    this.sprite.position.y = this.box.height / 2;
-    this.sprite.scale.x = -this.sprite.scale.x;
   }
 
-  onInput() {
-    const left = isKeyDown('SteerLeft', this.myPlayer);
-    const right = isKeyDown('SteerRight', this.myPlayer);
+  update() {
+    if(this.isHalted) return;
 
+    // TODO update wheel positions
+    const left = KeyMapHandler.isDown('SteerLeft', this.myPlayer);
+    const right = KeyMapHandler.isDown('SteerRight', this.myPlayer);
+
+    // this.wheelSprites.children[0].rotation = this.wheelSprites.children[1].rotation = 0.5 * (+left - +right);
+
+    if(left) {
+      this.wheelSprites.children.forEach(wheel => (<any>wheel).body.rotateLeft(0.5));
+
+    } if(right) {
+      this.wheelSprites.children.forEach(wheel => (<any>wheel).body.rotateRight(0.5));
+
+    } else {
+      this.wheelSprites.children.forEach(wheel => (<any>wheel).body.rotation = 0);
+    }
+
+    /*
     this.frontWheel.steerValue = this.maxSteer * (left - right);
     this.wheelSprites[0].rotation = this.wheelSprites[1].rotation = 0.5 * (left - right);
     this.backWheel.setBrakeForce(0);
+    */
 
-    if(isKeyDown('Brake', this.myPlayer)) {
+    if(KeyMapHandler.isDown('Brake', this.myPlayer)) {
       // Moving forward - add some brake force to slow down
+      /*
       if(this.backWheel.getSpeed() > 0) {
         this.backWheel.setBrakeForce(2);
       }
+      */
     }
   }
 
   protected setSideFriction(front: number, back: number) {
-    this.frontWheel.setSideFriction(front);
-    this.backWheel.setSideFriction(back);
+    // this.frontWheel.setSideFriction(front);
+    // this.backWheel.setSideFriction(back);
   }
 
   public halt() {
-    this.backWheel.setBrakeForce(2);
-    this.box.collisionGroup = ConfigManager.collisionMasks.CAR;
+    this.isHalted = true;
+    // this.backWheel.setBrakeForce(2);
+    // this.box.collisionGroup = ConfigManager.collisionMasks.CAR;
   }
 }

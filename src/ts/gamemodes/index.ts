@@ -1,2 +1,2 @@
 
-export * from './MultiplayerValet';
+export * from '../states/gamemode/MultiplayerValet';

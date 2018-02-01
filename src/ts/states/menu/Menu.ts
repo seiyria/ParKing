@@ -1,24 +1,16 @@
 
 import * as _ from 'lodash';
 
-import { ResourceManager } from '../../global/resources';
-import { World } from '../../global/world';
-import { isKeyDown } from '../../global/key';
-import { GameLevel } from '../../gamelevels/GameLevel';
-import { GameState } from '../../global/gamestate';
+import { KeyMapHandler } from '../../global/key';
 import { Helpers } from '../../global/helpers';
 
-export const ACCUMULATOR_THRESHOLD = 75;
+class Option {
 
-export class Option {
-
-  callback: () => {};
-  onInputChange: () => boolean;
-  update: (state?: any) => {};
-  state: any;
+  callback: () => void;
+  update: (state?: any) => void;
   textObj: Phaser.Text;
 
-  constructor(opts: { callback?: Function, onInputChange?: Function, update?: Function, state?: any }) {
+  constructor(opts: { callback?: Function, update?: Function }) {
     _.extend(this, opts);
   }
 }
@@ -33,32 +25,83 @@ export abstract class Menu extends Phaser.State {
   protected menuOptionSpacing = 50;
   protected menuAlign: 'left'|'center' = 'left';
 
-  protected background: PIXI.Sprite;
-  protected pointer: PIXI.Sprite;
-  protected alphaText: PIXI.Text;
-  protected titleText: PIXI.Text;
+  protected menuTitle: string;
+
+  protected background: Phaser.Sprite;
+  protected pointer: Phaser.Sprite;
+  protected alphaText: Phaser.Text;
+  protected titleText: Phaser.Text;
+
+  constructor(opts) {
+    super();
+    _.extend(this, opts);
+  }
 
   public create() {
-    /*
-    this.background = new PIXI.Sprite(ResourceManager.getResource('default'));
-    this.background.width = World.renderer.width;
-    this.background.height = World.renderer.height;
-    this.background.tint = World.renderer.backgroundColor;
-    this.addChild(this.background);
+    this.game.world.scale.set(1, 1);
+    this.options = [];
 
-    this.pointer = new PIXI.Sprite(ResourceManager.getResource('menu-arrow'));
-    this.pointer.width = 16;
-    this.pointer.height = 16;
-    this.addChild(this.pointer);
+    this.pointer = this.game.add.sprite(0, 0, 'menu-arrow');
+    this.pointer.scale.y = 0.5;
+    this.pointer.scale.x = 0.5;
 
     const opts = Helpers.defaultTextOptions();
     opts.align = 'center';
     opts.fontSize = 10;
-    this.alphaText = new PIXI.Text('MEGA ALPHA EDITION', opts);
-    this.alphaText.x = 5;
-    this.alphaText.y = 5;
-    this.addChild(this.alphaText);
-    */
+    this.alphaText = this.game.add.text(10, 10, 'MEGA ALPHA EDITION', opts);
+
+    const titleOpts = Helpers.defaultTextOptions();
+    titleOpts.align = 'center';
+    titleOpts.fontSize = 50;
+    this.titleText = this.game.add.text(0, 100, this.menuTitle, titleOpts);
+    this.titleText.anchor.set(0.5);
+  }
+
+  public update() {
+    this.titleText.position.x = this.game.width / 2;
+
+    this.visibleOptions.forEach((opt, index) => {
+      this.setMenuTextXY(opt.textObj, index);
+    });
+
+    const opt = this.getCurrentOption();
+
+    if(opt) {
+      this.pointer.x = opt.textObj.x - 60;
+
+      const menuPointerAnimation = (this.game.time.now / 25) % 28;
+      if(menuPointerAnimation < 14) {
+        this.pointer.height = 16 - menuPointerAnimation;
+        this.pointer.y = (opt.textObj.y + menuPointerAnimation / 2) - 3;
+      } else {
+        this.pointer.height = menuPointerAnimation - 12;
+        this.pointer.y = (opt.textObj.y + 14 - (menuPointerAnimation / 2)) - 3;
+      }
+
+      if(opt.update) {
+        opt.update();
+      }
+
+      if(KeyMapHandler.isDown('Confirm', 0) && opt.callback) {
+        opt.callback();
+        return;
+      }
+    }
+
+    if(KeyMapHandler.isDown('Down', 0)) {
+      this.selectedOption++;
+      if(this.selectedOption >= this.options.length) this.selectedOption = 0;
+      this.recalculateVisibleOptions();
+      return;
+    }
+
+    if(KeyMapHandler.isDown('Up', 0)) {
+      this.selectedOption--;
+      if(this.selectedOption < 0) this.selectedOption = this.options.length - 1;
+      this.recalculateVisibleOptions();
+      return;
+    }
+
   }
 
   protected setMenuTextXY(textObj: Phaser.Text, optIndex: number) {
@@ -82,13 +125,19 @@ export abstract class Menu extends Phaser.State {
     }
   }
 
-  protected addOption(text: string, opts: { callback?: Function, onInputChange?: Function, update?: Function, state?: any }) {
+  protected addOption(text: string, opts: { callback?: Function, update?: Function }): Option {
 
     const newIndex = this.options.length;
 
     const newOpt = new Option(opts);
-    const textObj = new Phaser.Text(this.game, 0, 0, text, Helpers.defaultTextOptions());
+    const textObj = this.game.add.text(0, 0, text, Helpers.defaultTextOptions());
     newOpt.textObj = textObj;
+
+    textObj.inputEnabled = true;
+    if(opts.callback) textObj.events.onInputDown.add(opts.callback);
+    textObj.events.onInputOver.add(() => {
+      this.selectedOption = newIndex;
+    });
 
     this.setMenuTextXY(textObj, newIndex);
 
@@ -96,52 +145,17 @@ export abstract class Menu extends Phaser.State {
 
     if(newIndex === 0) {
       this.pointer.visible = true;
-      this.pointer.x = textObj.x - (20 * newIndex);
-      this.pointer.y = textObj.y + 5;
+      this.pointer.x = textObj.x - 70;
+      this.pointer.y = textObj.y + 3;
     }
 
     this.recalculateVisibleOptions();
+
+    return newOpt;
   }
 
   protected getCurrentOption(): Option {
     return this.options[this.selectedOption];
-  }
-
-  public onInputChange(): { playing?: boolean, done?: boolean, level?: GameLevel } {
-    const option = this.getCurrentOption();
-
-    let overrideDefault = false;
-
-    if(option && option.onInputChange) {
-      overrideDefault = option.onInputChange();
-    }
-
-    if(!overrideDefault) {
-      if(isKeyDown('Down')) {
-        this.selectedOption++;
-        if(this.selectedOption >= this.options.length) this.selectedOption = 0;
-        this.recalculateVisibleOptions();
-        return { done: true };
-      }
-
-      if(isKeyDown('Up')) {
-        this.selectedOption--;
-        if(this.selectedOption < 0) this.selectedOption = this.options.length - 1;
-        this.recalculateVisibleOptions();
-        return { done: true };
-      }
-
-      if(isKeyDown('Escape')) {
-        GameState.removeMenu();
-        return { done: true };
-      }
-
-      if(isKeyDown('Enter') && option && option.callback) {
-        return option.callback();
-      }
-    }
-
-    return {};
   }
 
   protected recalculateVisibleOptions() {
@@ -165,28 +179,5 @@ export abstract class Menu extends Phaser.State {
       opt.textObj.visible = true;
     });
 
-  }
-
-  protected addMenu(menu: Menu) {
-    // TODO change state to new menu
-  }
-
-  public update() {
-    this.visibleOptions.forEach((opt, index) => {
-      (<any>opt.textObj).style = Helpers.defaultTextOptions(); // shouldn't need <any> cast, but ts.d is broken
-      this.setMenuTextXY(opt.textObj, index);
-    });
-
-    const opt = this.getCurrentOption();
-    if(!opt) return;
-
-    if(opt.update) {
-      const state = opt.state || {};
-      state.opt = opt;
-      opt.update(state);
-    }
-
-    this.pointer.width = 16;
-    this.pointer.x = opt.textObj.x - 60;
   }
 }

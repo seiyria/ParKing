@@ -3,21 +3,33 @@ import 'p2';
 import 'pixi';
 import 'phaser';
 
+import './index.css';
+
 import * as WebFont from 'webfontloader';
 
-import { World } from './ts/global/world';
+import { KeyMapHandler } from './ts/global/key';
 import { GameState } from './ts/global/gamestate';
-import { MainMenu } from './ts/menus/MainMenu';
 
 import { Boot } from './ts/states/boot';
+import { Preloader } from './ts/states/Preloader';
 
-import './index.css';
+import * as MenuStates from './ts/states/menu';
+import * as GameModes from './ts/states/gamemode';
 
 class Game extends Phaser.Game {
   constructor(config) {
     super(config);
 
     this.state.add('Boot', Boot);
+    this.state.add('Preloader', Preloader);
+
+    Object.keys(MenuStates).forEach(key => {
+      this.state.add(key, MenuStates[key]);
+    });
+
+    Object.keys(GameModes).forEach(key => {
+      this.state.add(key, GameModes[key]);
+    });
 
     this.state.start('Boot');
   }
@@ -28,9 +40,7 @@ const fontPromise = new Promise(resolve => {
     custom: {
       families: ['Game']
     },
-    active: () => {
-      resolve();
-    }
+    active: resolve
   });
 });
 
@@ -39,9 +49,11 @@ export let game: Game;
 Promise.all([fontPromise])
   .then(() => {
     game = new Game({
-      width: '100%',
-      height: '100%',
-      renderer: Phaser.AUTO,
-      resolution: 1
+      width: window.innerWidth,
+      height: window.innerHeight,
+      renderer: Phaser.AUTO
     });
+
+    KeyMapHandler.init(game);
+    GameState.init(game);
   });

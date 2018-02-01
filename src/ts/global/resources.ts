@@ -2,8 +2,6 @@
 export class ResourceManager {
   private static rootPath = '../../assets';
 
-  private static resources: any;
-
   private static carSprites = [
     'blue',
     'green',
@@ -18,51 +16,54 @@ export class ResourceManager {
   ];
 
   private static objectSprites = [
-    'car',
-    'car-wheel',
-    'parking-outline'
+    'car-wheel'
   ];
 
   private static uiSprites = [
     'default',
     'menu-arrow',
-    'preload_bar',
-    'preload_frame'
+    'preload-bar',
+    'preload-frame'
   ];
 
-  private static levels = [
-    'test'
+  private static gameSpriteSheets = [
+    'parking-map',
+    'parking-objects'
   ];
-
-  public static get allResources() {
-    return ResourceManager.resources;
-  }
-
-  public static getResource(resource: string) {
-    if(!ResourceManager.resources[resource]) throw new Error(`Resource ${resource} does not exist.`);
-
-    return ResourceManager.resources[resource].texture;
-  }
-
-  /*
-  static init() {
-    ResourceManager.carSprites.forEach(    sprite => ResourceManager.defaultLoader.add(`car-${sprite}`,
-      `${ResourceManager.rootPath}/game/vehicles/car-${sprite}.png`));
-    ResourceManager.truckSprites.forEach(  sprite => ResourceManager.defaultLoader.add(`truck-${sprite}`,
-      `${ResourceManager.rootPath}/game/vehicles/truck-${sprite}.png`));
-    ResourceManager.objectSprites.forEach( sprite => ResourceManager.defaultLoader.add(sprite,
-      `${ResourceManager.rootPath}/game/objects/${sprite}.png`));
-    ResourceManager.uiSprites.forEach(     sprite => ResourceManager.defaultLoader.add(sprite,
-      `${ResourceManager.rootPath}/ui/${sprite}.png`));
-    ResourceManager.levels.forEach(        sprite => ResourceManager.defaultLoader.add(`level-${sprite}`,
-      `${ResourceManager.rootPath}/levels/${sprite}.png`));
-
-    ResourceManager.load();
-  }
-  */
 
   static get UISprites() {
-    return ResourceManager.uiSprites.map(sprite => ({ name: sprite, path: `${ResourceManager.rootPath}/ui/${sprite}.png` }));
+    return ResourceManager.uiSprites.map(sprite => ({
+      name: sprite,
+      path: `${ResourceManager.rootPath}/ui/${sprite}.png`
+    }));
+  }
+
+  static get InGameSpriteSheets() {
+    return ResourceManager.gameSpriteSheets.map(sprite => ({
+      name: sprite,
+      path: `${ResourceManager.rootPath}/game/${sprite}.png`
+    }));
+  }
+
+  static get ObjectSprites() {
+    return ResourceManager.objectSprites.map(sprite => ({
+      name: sprite,
+      path: `${ResourceManager.rootPath}/game/objects/${sprite}.png`
+    }));
+  }
+
+  static get VehicleSprites() {
+    const carSprites = ResourceManager.carSprites.map(sprite => ({
+      name: `car-${sprite}`,
+      path: `${ResourceManager.rootPath}/game/vehicles/car-${sprite}.png`
+    }));
+
+    const truckSprites = ResourceManager.truckSprites.map(sprite => ({
+      name: `truck-${sprite}`,
+      path: `${ResourceManager.rootPath}/game/vehicles/truck-${sprite}.png`
+    }));
+
+    return carSprites.concat(truckSprites);
   }
 
 }

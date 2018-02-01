@@ -1,20 +1,13 @@
 
-import * as p2 from 'p2';
-
 import { Entity } from './Entity';
 import { ConfigManager } from '../global/config';
-import { World } from '../global/world';
+import { GameState } from '../global/gamestate';
 
 export class Explosion extends Entity {
 
-  constructor({ x, y }, private force: number, private radius: number) {
-    super({
-      x, y,
-      mass: 0
-    });
-  }
-
-  protected init() {
+  private force: number;
+  private radius: number;
+    /*
     const circle = new p2.Circle({ radius: this.radius });
     circle.collisionGroup = ConfigManager.collisionMasks.BOMB;
     circle.collisionMask = ConfigManager.collisionMasks.PLAYER | ConfigManager.collisionMasks.CAR;
@@ -36,14 +29,13 @@ export class Explosion extends Entity {
       direction[1] = (direction[1] / distance) * this.force;
       otherBody.applyImpulse(direction);
     };
-
-  }
+    */
 
   explode() {
-    World.screenShake();
+    GameState.screenShake();
 
     setTimeout(() => {
-      this.removeFromWorld();
+      // this.removeFromWorld();
     }, 33);
   }
 }

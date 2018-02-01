@@ -1,88 +1,98 @@
 
-const playerGamepads = [];
+import * as Phaser from 'phaser-ce';
 
-const _keys = {
-  37: 0,              // left
-  39: 0,              // right
-  38: 0,              // up
-  40: 0,              // down
-  13: 0,              // enter
-  27: 0,              // escape
-  8 : 0,              // backspace
-  32: 0,              // spacebar
-  17: 0,              // ctrl
-  18: 0,              // alt
-  91: 0,              // Windows Key / Left Command
-  93: 0,              // Windows Menu / Right Command
-  16: 0,              // shift
-  9 : 0,              // tab
-  20: 0,              // caps lock
-  192: 0,             // backtick / tilde ("grave accent")
-  220: 0,             // back slash
+type Key = 'Left' | 'Right' | 'Up' | 'Down'
+  | 'Confirm' | 'Back' | 'Pause' | 'Debug'
+  | 'Brake' | 'SteerLeft' | 'SteerRight';
+
+const KeyToPhaserKey = {
+  Up:         Phaser.Keyboard.UP,
+  Down:       Phaser.Keyboard.DOWN,
+  Left:       Phaser.Keyboard.LEFT,
+  Right:      Phaser.Keyboard.RIGHT,
+
+  Confirm:    Phaser.Keyboard.ENTER,
+  Back:       Phaser.Keyboard.ESC,
+  Pause:      Phaser.Keyboard.SPACEBAR,
+  Debug:      Phaser.Keyboard.TILDE,
+
+  Brake:      0,
+  SteerLeft:  0,
+  SteerRight: 0
 };
 
-export const KeyMap = {
-  Left       : 37,    // left arrow
-  Right      : 39,    // right arrow
-  Up         : 38,    // up arrow
-  Down       : 40,    // down arrow
-  Enter      : 13,    // enter button
-  Escape     : 27,    // escape button
-  Pause      : 13,    // enter button
-  SteerLeft  : 37,    // left arrow
-  SteerRight : 39,    // right arrow
-  Brake      : 40,    // down arrow
-  Debug      : 192    // tilde
+KeyToPhaserKey.Brake = KeyToPhaserKey.Down;
+KeyToPhaserKey.SteerLeft = KeyToPhaserKey.Left;
+KeyToPhaserKey.SteerRight = KeyToPhaserKey.Right;
+
+const KeyToGamepad = {
+  Up: (gamepad: Phaser.Gamepad): boolean => {
+    return gamepad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP)
+      || (<any>gamepad).axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) <= -0.1;
+  },
+  Down: (gamepad: Phaser.Gamepad): boolean => {
+    return gamepad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN)
+        || (<any>gamepad).axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) >= 0.1;
+  },
+  Left: (gamepad: Phaser.Gamepad): boolean => {
+    return gamepad.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT)
+      || (<any>gamepad).axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) <= -0.1;
+  },
+  Right: (gamepad: Phaser.Gamepad): boolean => {
+    return gamepad.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT)
+      || (<any>gamepad).axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) >= 0.1;
+  },
+
+  Confirm: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_A),
+  Back: (gamepad: Phaser.Gamepad): boolean => {
+    return gamepad.isDown(Phaser.Gamepad.XBOX360_B) || gamepad.isDown(Phaser.Gamepad.XBOX360_BACK);
+  },
+  Pause: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_START),
+  Debug: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
+
+  Brake: (gamepad: Phaser.Gamepad): boolean => false,
+  SteerLeft: (gamepad: Phaser.Gamepad): boolean => false,
+  SteerRight: (gamepad: Phaser.Gamepad): boolean => false
 };
 
-export const ButtonMap = {
-  Left       : 14,    // dpad-L
-  Right      : 15,    // dpad-R
-  Up         : 12,    // dpad-U
-  Down       : 13,    // dpad-D
-  Enter      : 0,     // xbox-A
-  Escape     : 1,     // xbox-B
-  Pause      : 9,     // xbox-Pause
-  SteerLeft  : 14,    // dpad-L
-  SteerRight : 15,    // dpad-R
-  Brake      : 0,     // xbox-A
-  Debug      : 4      // xbox-RB
-};
+KeyToGamepad.Brake = KeyToGamepad.Down;
+KeyToGamepad.SteerLeft = KeyToGamepad.Left;
+KeyToGamepad.SteerRight = KeyToGamepad.Right;
 
-type Key = 'Left' | 'Right' | 'Up' | 'Down' | 'Enter' | 'Escape' | 'Backspace'
-| 'SteerLeft' | 'SteerRight' | 'Brake' | 'Debug' | 'Pause';
+const FRAME_MOD = 10;
+const FRAMES_PERCENT = 80;
+const DROPPED_FRAMES = FRAME_MOD * (FRAMES_PERCENT / 100);
 
-export function isKeyDown(key: Key, player = 0) {
-  const baseCond = _keys[KeyMap[key]];
+export class KeyMapHandler {
 
-  // only check gamepads if the doc has focus
-  if(playerGamepads[player] && document.hasFocus()) {
-    const gamepad = navigator.getGamepads()[player];
-    const button = gamepad.buttons[ButtonMap[key]];
-    return baseCond || button.pressed;
+  private static game: Phaser.Game;
+
+  public static init(game: Phaser.Game) {
+    if(KeyMapHandler.game) throw new Error('Cannot re-init KeyMapHandler');
+    KeyMapHandler.game = game;
   }
 
-  return baseCond;
+  public static isDown(key: Key, player = 0) {
+    // drop some input
+    if((KeyMapHandler.game.time.now / FRAME_MOD) % FRAME_MOD < DROPPED_FRAMES) return;
+
+    const keyboard = KeyMapHandler.isKeyDown(key, player);
+    const gamepad = KeyMapHandler.isGamepadDown(key, player);
+
+    return keyboard || gamepad;
+  }
+
+  private static isKeyDown(key: Key, player = 0): boolean {
+    if(player !== 0) return false;
+    return KeyMapHandler.game.input.keyboard.isDown(KeyToPhaserKey[key]);
+  }
+
+  private static isGamepadDown(key: Key, player = 0): boolean {
+    const gamepadContainer = KeyMapHandler.game.input.gamepad;
+    const gamepad = gamepadContainer[`pad${player + 1}`];
+
+    if(!gamepadContainer.supported || !gamepadContainer.active || !gamepad || !gamepad.connected) return false;
+
+    return KeyToGamepad[key](gamepad);
+  }
 }
-
-export function setKeyValue(key: number, val: number) {
-  _keys[key] = val;
-}
-
-export function setKey(key: number) {
-  setKeyValue(key, 1);
-}
-
-export function unsetKey(key: number) {
-  setKeyValue(key, 0);
-}
-
-window.addEventListener('gamepadconnected', (e: GamepadEvent) => {
-  const pad = e.gamepad;
-  playerGamepads[pad.index] = true;
-});
-
-window.addEventListener('gamepaddisconnected', (e: GamepadEvent) => {
-  const pad = e.gamepad;
-  playerGamepads[pad.index] = null;
-});

@@ -5,41 +5,31 @@ import { Car } from './Car';
 import { ResourceManager } from '../global/resources';
 
 export class RedCar extends Car {
-  constructor(opts) {
-    super(_.defaults({
-      texture: ResourceManager.getResource('car-red')
-    }, opts));
+  constructor(game: Phaser.Game, x: number, y: number) {
+    super(game, x, y, 'car-red');
   }
 }
 
 export class BlueCar extends Car {
-  constructor(opts) {
-    super(_.defaults({
-      texture: ResourceManager.getResource('car-blue')
-    }, opts));
+  constructor(game: Phaser.Game, x: number, y: number) {
+    super(game, x, y, 'car-blue');
   }
 }
 
 export class GreenCar extends Car {
-  constructor(opts) {
-    super(_.defaults({
-      texture: ResourceManager.getResource('car-green')
-    }, opts));
+  constructor(game: Phaser.Game, x: number, y: number) {
+    super(game, x, y, 'car-green');
   }
 }
 
 export class OrangeCar extends Car {
-  constructor(opts) {
-    super(_.defaults({
-      texture: ResourceManager.getResource('car-orange')
-    }, opts));
+  constructor(game: Phaser.Game, x: number, y: number) {
+    super(game, x, y, 'car-orange');
   }
 }
 
 export class RedStripeCar extends Car {
-  constructor(opts) {
-    super(_.defaults({
-      texture: ResourceManager.getResource('car-red-stripe')
-    }, opts));
+  constructor(game: Phaser.Game, x: number, y: number) {
+    super(game, x, y, 'car-red-stripe');
   }
 }
