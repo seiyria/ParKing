@@ -1,5 +1,6 @@
 
 import * as _ from 'lodash';
+import * as p2 from 'p2';
 
 import { Entity } from './Entity';
 import { ConfigManager } from '../global/config';
@@ -11,11 +12,9 @@ export abstract class ControlledEntity extends Entity {
 
   private myPlayer: number;
 
-  /*
   protected vehicle: any;     // p2.TopDownVehicle
   protected frontWheel: any;  // p2.WheelConstraint;
   protected backWheel: any;   // p2.WheelConstraint;
-  */
 
   protected wheelSprites: Phaser.Group;
 
@@ -35,7 +34,7 @@ export abstract class ControlledEntity extends Entity {
     ];
 
     if(!this.wheelRotationSpeed) this.wheelRotationSpeed = 300;
-    if(!this.maxSteer) this.maxSteer = 100;
+    if(!this.maxSteer) this.maxSteer = 50;
     if(!this.body.mass) this.body.mass = 1;
 
     /*
@@ -50,13 +49,16 @@ export abstract class ControlledEntity extends Entity {
       }
     };
 
-    this.box = new p2.Box({ width: opts.w, height: opts.h });
-    this.box.collisionGroup = ConfigManager.collisionMasks.PLAYER;
-    this.box.collisionMask = ConfigManager.collisionMasks.ALL;
 
-    this.body.addShape(this.box);
+
+
+
+
+
+
 
     this.vehicle = new (<any>p2).TopDownVehicle(this.body);
+    this.vehicle.addToWorld(this.game.physics.p2.world);
      */
 
     this.setSideFriction(150, 150);
@@ -67,7 +69,7 @@ export abstract class ControlledEntity extends Entity {
       const [x, y] = opts.wheelPositions[i];
       const wheelSprite = this.game.make.sprite(x, y, 'car-wheel');
 
-      this.game.physics.p2.enable(wheelSprite);
+      // this.game.physics.p2.enable(wheelSprite);
       // this.game.physics.p2.createRevoluteConstraint(this.body, [x, y], wheelSprite.body, [0, 0], this.maxSteer);
       this.wheelSprites.addChild(wheelSprite);
     }
@@ -76,29 +78,29 @@ export abstract class ControlledEntity extends Entity {
   update() {
     if(this.isHalted) return;
 
-    // TODO update wheel positions
-    const left = KeyMapHandler.isDown('SteerLeft', this.myPlayer);
-    const right = KeyMapHandler.isDown('SteerRight', this.myPlayer);
+    const left = KeyMapHandler.isDown('SteerLeft', this.myPlayer, false);
+    const right = KeyMapHandler.isDown('SteerRight', this.myPlayer, false);
 
     // this.wheelSprites.children[0].rotation = this.wheelSprites.children[1].rotation = 0.5 * (+left - +right);
 
-    if(left) {
-      this.wheelSprites.children.forEach(wheel => (<any>wheel).body.rotateLeft(0.5));
+    let angle = 0;
 
-    } if(right) {
-      this.wheelSprites.children.forEach(wheel => (<any>wheel).body.rotateRight(0.5));
+    if(left) {
+      angle = -15;
+      this.wheelSprites.children.forEach(wheel => (<Phaser.Sprite>wheel).angle = angle);
+      this.body.rotateLeft(Math.abs(angle));
+
+    } else if(right) {
+      angle = 15;
+      this.wheelSprites.children.forEach(wheel => (<Phaser.Sprite>wheel).angle = angle);
+      this.body.rotateRight(Math.abs(angle));
 
     } else {
-      this.wheelSprites.children.forEach(wheel => (<any>wheel).body.rotation = 0);
+      this.wheelSprites.children.forEach(wheel => (<Phaser.Sprite>wheel).angle = angle);
+      this.body.setZeroRotation();
     }
 
-    /*
-    this.frontWheel.steerValue = this.maxSteer * (left - right);
-    this.wheelSprites[0].rotation = this.wheelSprites[1].rotation = 0.5 * (left - right);
-    this.backWheel.setBrakeForce(0);
-    */
-
-    if(KeyMapHandler.isDown('Brake', this.myPlayer)) {
+    if(KeyMapHandler.isDown('Brake', this.myPlayer, false)) {
       // Moving forward - add some brake force to slow down
       /*
       if(this.backWheel.getSpeed() > 0) {

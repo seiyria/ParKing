@@ -102,7 +102,7 @@ export abstract class GameMode extends Phaser.State {
     this.game.physics.startSystem(Phaser.Physics.P2JS);
 
     this.game.physics.p2.setImpactEvents(true);
-    (<any>this.game.physics.p2).defaultRestitution = 0.8;
+    this.game.physics.p2.restitution = 0.8;
   }
 
   private createPhysicsGroups() {

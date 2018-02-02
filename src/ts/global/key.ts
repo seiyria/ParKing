@@ -72,9 +72,10 @@ export class KeyMapHandler {
     KeyMapHandler.game = game;
   }
 
-  public static isDown(key: Key, player = 0) {
-    // drop some input
-    if((KeyMapHandler.game.time.now / FRAME_MOD) % FRAME_MOD < DROPPED_FRAMES) return;
+  public static isDown(key: Key, player = 0, useFrameLimiter = true) {
+
+    // drop some input, useful for menus
+    if(useFrameLimiter && (KeyMapHandler.game.time.now / FRAME_MOD) % FRAME_MOD < DROPPED_FRAMES) return;
 
     const keyboard = KeyMapHandler.isKeyDown(key, player);
     const gamepad = KeyMapHandler.isGamepadDown(key, player);
