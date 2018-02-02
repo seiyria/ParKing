@@ -9,7 +9,7 @@ import { GameState, PlayerColor } from '../../global/gamestate';
 import * as Cars from '../../actors/AllCars';
 import { ControlledEntity } from '../../actors/ControlledEntity';
 
-const VELOCITY_STOP_THRESHOLD = 3;
+const VELOCITY_STOP_THRESHOLD = 1;
 
 export class MultiplayerValet extends GameMode {
 
@@ -111,8 +111,9 @@ export class MultiplayerValet extends GameMode {
     if(state.playerCars.length === 0) return true;
 
     return !_.some(state.playerCars, car => {
-      return _.get(car, 'body.velocity.x', 0) > VELOCITY_STOP_THRESHOLD
-          || _.get(car, 'body.velocity.y', 0) > VELOCITY_STOP_THRESHOLD;
+      const [x, y] = car.body.velocity.destination.map(Math.abs);
+      return x > VELOCITY_STOP_THRESHOLD
+          || y > VELOCITY_STOP_THRESHOLD;
     });
   }
 

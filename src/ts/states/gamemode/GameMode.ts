@@ -151,12 +151,7 @@ export abstract class GameMode extends Phaser.State {
     car.body.velocity.x = decidedVelX;
     car.body.angle = decidedVelX > 0 ? 90 : -90;
 
-    // if we're traveling horizontally we move the car up by it's width (rotated) over half
-    if(Math.abs(decidedVelX) > 0) {
-      car.y -= car.width / 2;
-    }
-
-    car.create({ myPlayer: playerIdx, isDebug: this.isDebug });
+    car.create({ myPlayer: playerIdx, thrust: decidedVelX, isDebug: this.isDebug });
 
     return car;
   }

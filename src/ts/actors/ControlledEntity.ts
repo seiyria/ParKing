@@ -1,6 +1,5 @@
 
 import * as _ from 'lodash';
-import * as p2 from 'p2';
 
 import { Entity } from './Entity';
 import { ConfigManager } from '../global/config';
@@ -12,14 +11,16 @@ export abstract class ControlledEntity extends Entity {
 
   private myPlayer: number;
 
-  protected vehicle: any;     // p2.TopDownVehicle
-  protected frontWheel: any;  // p2.WheelConstraint;
-  protected backWheel: any;   // p2.WheelConstraint;
-
   protected wheelSprites: Phaser.Group;
 
   protected maxSteer: number;
   protected wheelRotationSpeed: number;
+  protected thrust: number;
+  protected brakeForce: number;
+  protected brakeHold: number
+  protected turnAngle: number;
+
+  protected baseThrust: number;
 
   private isHalted: boolean;
 
@@ -34,43 +35,21 @@ export abstract class ControlledEntity extends Entity {
     ];
 
     if(!this.wheelRotationSpeed) this.wheelRotationSpeed = 300;
-    if(!this.maxSteer) this.maxSteer = 50;
-    if(!this.body.mass) this.body.mass = 1;
+    if(!this.maxSteer)    this.maxSteer = 100;
+    if(!this.thrust)      this.thrust = 100;
+    if(!this.brakeForce)  this.brakeForce = 0.7;
+    if(!this.brakeHold)   this.brakeHold = 10;
+    if(!this.turnAngle)   this.turnAngle = 30;
+    if(!this.body.mass)   this.body.mass = 1;
 
-    /*
-    (<any>this.body).onCollision = (body) => {
-      this.setSideFriction(3, 3);
-      GameState.screenShake(3, 3);
+    this.baseThrust = this.thrust;
 
-      if(body.shapes[0].collisionGroup === ConfigManager.collisionMasks.WALL) {
-        setTimeout(() => {
-          this.setSideFriction(200, 200);
-        }, 100);
-      }
-    };
-
-
-
-
-
-
-
-
-
-    this.vehicle = new (<any>p2).TopDownVehicle(this.body);
-    this.vehicle.addToWorld(this.game.physics.p2.world);
-     */
-
-    this.setSideFriction(150, 150);
-
+    this.body.damping = 0.9;
     this.wheelSprites = this.game.add.group(this);
 
     for(let i = 0; i < opts.wheelPositions.length; i++) {
       const [x, y] = opts.wheelPositions[i];
       const wheelSprite = this.game.make.sprite(x, y, 'car-wheel');
-
-      // this.game.physics.p2.enable(wheelSprite);
-      // this.game.physics.p2.createRevoluteConstraint(this.body, [x, y], wheelSprite.body, [0, 0], this.maxSteer);
       this.wheelSprites.addChild(wheelSprite);
     }
   }
@@ -81,43 +60,46 @@ export abstract class ControlledEntity extends Entity {
     const left = KeyMapHandler.isDown('SteerLeft', this.myPlayer, false);
     const right = KeyMapHandler.isDown('SteerRight', this.myPlayer, false);
 
-    // this.wheelSprites.children[0].rotation = this.wheelSprites.children[1].rotation = 0.5 * (+left - +right);
-
     let angle = 0;
 
     if(left) {
-      angle = -15;
-      this.wheelSprites.children.forEach(wheel => (<Phaser.Sprite>wheel).angle = angle);
-      this.body.rotateLeft(Math.abs(angle));
+      angle = -this.turnAngle;
 
     } else if(right) {
-      angle = 15;
-      this.wheelSprites.children.forEach(wheel => (<Phaser.Sprite>wheel).angle = angle);
-      this.body.rotateRight(Math.abs(angle));
+      angle = this.turnAngle;
 
     } else {
-      this.wheelSprites.children.forEach(wheel => (<Phaser.Sprite>wheel).angle = angle);
       this.body.setZeroRotation();
     }
 
-    if(KeyMapHandler.isDown('Brake', this.myPlayer, false)) {
-      // Moving forward - add some brake force to slow down
-      /*
-      if(this.backWheel.getSpeed() > 0) {
-        this.backWheel.setBrakeForce(2);
-      }
-      */
+    if(angle !== 0) {
+      this.body.rotateRight(this.dampenAngleBasedOnThrust(angle));
     }
+
+    this.updateWheelAngles(this.dampenAngleBasedOnThrust(angle / 2));
+
+    this.body.thrust(this.thrust);
+
+    if(KeyMapHandler.isDown('Brake', this.myPlayer, false)) {
+      this.thrust -= this.brakeForce;
+    }
+
+    this.thrust -= this.brakeForce / this.brakeHold;
+    if(this.thrust <= 0) this.thrust = 0;
   }
 
-  protected setSideFriction(front: number, back: number) {
-    // this.frontWheel.setSideFriction(front);
-    // this.backWheel.setSideFriction(back);
+  private dampenAngleBasedOnThrust(angle: number): number {
+    return angle * (this.thrust / this.baseThrust);
+  }
+
+  private updateWheelAngles(angle: number) {
+    this.wheelSprites.children.forEach(wheel => (<Phaser.Sprite>wheel).angle = angle);
   }
 
   public halt() {
     this.isHalted = true;
-    // this.backWheel.setBrakeForce(2);
-    // this.box.collisionGroup = ConfigManager.collisionMasks.CAR;
+    this.body.setZeroRotation();
+    this.body.angularDamping = 0.9;
+    this.updateWheelAngles(0);
   }
 }
