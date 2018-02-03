@@ -120,6 +120,10 @@ export abstract class GameMode extends Phaser.State {
   }
 
   private fixParkingSpaces() {
+    const twoSpaces = _.sampleSize(this.groupParkingSpaces.children, 2);
+    twoSpaces[0].frame = 1;
+    twoSpaces[1].frame = 2;
+
     this.groupParkingSpaces.children.forEach(space => {
 
       // apparently phaser doesn't like rotations
@@ -149,7 +153,7 @@ export abstract class GameMode extends Phaser.State {
     const xMod = rotate < 0 ? -32 : 32;
     const car: ControlledEntity = new CarProto(this.game, x - xMod, y - 32);
 
-    const decidedVelX = _.random(minVelX, maxVelX) * 40;
+    const decidedVelX = _.random(minVelX, maxVelX) * _.sample([80, 70, 60]);
 
     this.game.add.existing(car);
     this.groupCars.add(car);

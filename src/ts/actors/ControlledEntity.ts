@@ -19,6 +19,7 @@ export abstract class ControlledEntity extends Entity {
   protected mass: number;
   protected damping: number;
   protected reverseThrustMod: number;
+  protected thrustLossMult: number;
 
   protected baseThrust: number;
 
@@ -34,14 +35,15 @@ export abstract class ControlledEntity extends Entity {
       [(this.width / 2)  - 1, (this.height / 2) - 10]
     ];
 
-    if(!this.thrust)              this.thrust = 100;
+    if(!this.thrust)              this.thrust = 600;
     if(!this.brakeForce)          this.brakeForce = 0.7;
     if(!this.brakeHold)           this.brakeHold = 10;
     if(!this.turnAngle)           this.turnAngle = 45;
     if(!this.reverseThrustMod)    this.reverseThrustMod = 4;
+    if(!this.thrustLossMult)      this.thrustLossMult = 4;
 
     if(!this.mass)                this.mass = 1;
-    if(!this.damping)             this.damping = 0.9;
+    if(!this.damping)             this.damping = 0.8;
 
     this.body.mass = this.mass;
     this.body.damping = this.damping;
@@ -94,6 +96,8 @@ export abstract class ControlledEntity extends Entity {
     if(this.angle !== 0) thrustLoss *= 3;
 
     this.loseThrust(thrustLoss);
+
+    this.checkForOffscreen();
   }
 
   private dampenAngleBasedOnThrust(angle: number): number {
@@ -117,12 +121,16 @@ export abstract class ControlledEntity extends Entity {
     if(this.isHalted) return;
 
     // hitting a wall on a right angle = reverse thrust. otherwise you just graze it and lose thrust.
-    const cleanAngle = (Math.abs(this.body.angle) % 90) / 45;
-    if(cleanAngle > 1) {
+    const cleanAngle = (Math.abs(this.body.angle) % 90);
+
+    if(cleanAngle >= 20 && cleanAngle <= 70) {
+      let lostThrust = 50;
+      if(cleanAngle >= 30 && cleanAngle <= 60) lostThrust -= 10;
+      if(cleanAngle >= 40 && cleanAngle <= 50) lostThrust -= 20;
+      this.loseThrust(lostThrust);
+    } else {
       this.reverseThrust();
       GameState.screenShake(5, 5);
-    } else {
-      this.loseThrust(10);
     }
   }
 
@@ -131,6 +139,7 @@ export abstract class ControlledEntity extends Entity {
   }
 
   private loseThrust(lost: number) {
+    lost *= this.thrustLossMult;
 
     // if we hit a wall and are going backwards
     if(this.thrust < 0) {
@@ -146,9 +155,22 @@ export abstract class ControlledEntity extends Entity {
     if(this.thrust < 0) this.thrust = 0;
   }
 
+  // if a car goes offscreen, it's gone forever
+  private checkForOffscreen() {
+    if(this.x + this.width > 0 && this.x < this.game.width
+    && this.y + this.height > 0 && this.y < this.game.height) return;
+
+    this.halt();
+
+    setTimeout(() => this.kill(), 2000);
+  }
+
   public halt() {
     this.isHalted = true;
     this.thrust = 0;
+    this.body.velocity.x = 0;
+    this.body.velocity.y = 0;
+
     this.body.setZeroRotation();
     this.body.angularDamping = 0.9;
     this.updateWheelAngles(0);

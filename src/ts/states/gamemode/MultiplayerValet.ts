@@ -75,9 +75,6 @@ export class MultiplayerValet extends GameMode {
 
     }
 
-    state.playerCars.forEach(car => {
-      car.update();
-    });
   }
 
   private updateCarsText() {
