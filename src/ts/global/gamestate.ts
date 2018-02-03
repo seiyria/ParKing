@@ -21,8 +21,6 @@ class GameStateProps {
   playerCars: ControlledEntity[] = [];  // current player cars
   playerScores: number[] = [];          // current player scores
   cars = [];                            // all cars
-  level: any;                     // current game level
-  gameMode: any;                   // current game mode
   debug: boolean;                       // are we in toggleDebug mode
 }
 
@@ -52,20 +50,8 @@ export class GameState {
     GameState.setPlaying(true);
   }
 
-  private static setGameMode(mode: any) {
-    GameState._state.gameMode = mode;
-  }
-
-  private static setPlaying(playing: boolean) {
+  public static setPlaying(playing: boolean) {
     GameState._state.playing = playing;
-
-    if(!playing) {
-      GameState.reset();
-    }
-  }
-
-  private static setLevel(level: any) {
-    GameState._state.level = level;
   }
 
   static setPlayerCars(cars: ControlledEntity[]) {
@@ -109,15 +95,9 @@ export class GameState {
     GameState._state.players = [];
     GameState._state.playerCars = [];
     GameState._state.playerScores = [];
-    GameState._state.level = null;
-    GameState._state.gameMode = null;
   }
 
-  public static resetGame() {
-    const state = GameState.state;
-    if(state.level) state.level.unload();
-
-    GameState.setGameMode(null);
+  public static resetGame() {  
     GameState.setPlaying(false);
 
     for(let i = 0; i < 4; i++) {

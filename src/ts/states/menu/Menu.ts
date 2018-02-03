@@ -27,10 +27,13 @@ export abstract class Menu extends Phaser.State {
 
   protected menuTitle: string;
 
-  protected background: Phaser.Sprite;
   protected pointer: Phaser.Sprite;
   protected alphaText: Phaser.Text;
   protected titleText: Phaser.Text;
+
+  protected menuItems: Phaser.Group;
+
+  protected menuControlPlayer: number = 0;
 
   constructor(opts) {
     super();
@@ -55,6 +58,11 @@ export abstract class Menu extends Phaser.State {
     titleOpts.fontSize = 50;
     this.titleText = this.game.add.text(0, 100, this.menuTitle, titleOpts);
     this.titleText.anchor.set(0.5);
+
+    this.menuItems = this.game.add.group();
+    this.menuItems.add(this.pointer);
+    this.menuItems.add(this.alphaText);
+    this.menuItems.add(this.titleText);
   }
 
   public update() {
@@ -82,20 +90,20 @@ export abstract class Menu extends Phaser.State {
         opt.update();
       }
 
-      if(KeyMapHandler.isDown('Confirm', 0) && opt.callback) {
+      if(KeyMapHandler.isDown('Confirm', this.menuControlPlayer) && opt.callback) {
         opt.callback();
         return;
       }
     }
 
-    if(KeyMapHandler.isDown('Down', 0)) {
+    if(KeyMapHandler.isDown('Down', this.menuControlPlayer)) {
       this.selectedOption++;
       if(this.selectedOption >= this.options.length) this.selectedOption = 0;
       this.recalculateVisibleOptions();
       return;
     }
 
-    if(KeyMapHandler.isDown('Up', 0)) {
+    if(KeyMapHandler.isDown('Up', this.menuControlPlayer)) {
       this.selectedOption--;
       if(this.selectedOption < 0) this.selectedOption = this.options.length - 1;
       this.recalculateVisibleOptions();
@@ -150,6 +158,7 @@ export abstract class Menu extends Phaser.State {
     }
 
     this.recalculateVisibleOptions();
+    this.menuItems.add(textObj);
 
     return newOpt;
   }

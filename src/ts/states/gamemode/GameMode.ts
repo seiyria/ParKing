@@ -2,6 +2,7 @@
 import * as Phaser from 'phaser-ce';
 import * as _ from 'lodash';
 
+import { PausableMenu } from '../menu/PausableMenu';
 import { GameState } from '../../global/gamestate';
 import { ParkingSpace } from '../../actors/ParkingSpace';
 import { ControlledEntity } from '../../actors/ControlledEntity';
@@ -11,7 +12,7 @@ const MAP_GIDS = {
   PARKING_SPACE_PLAIN: 17
 };
 
-export abstract class GameMode extends Phaser.State {
+export abstract class GameMode extends PausableMenu {
 
   protected possibleMaps: string[] = [];
   protected chosenMapName: string;
@@ -29,20 +30,32 @@ export abstract class GameMode extends Phaser.State {
     GameState.resetPlayerScores();
   }
 
-  preload() {
-    this.game.stage.backgroundColor = '#333';
+  create() {
+    super.create();
+    this.loadMap();
   }
 
   update() {
+    super.update();
+
     if(KeyMapHandler.isDown('Debug')) {
       const isDebug = GameState.toggleDebug();
       this.isDebug = isDebug;
       this.groupCars.children.forEach(car => (<ControlledEntity>car).toggleDebug(isDebug));
     }
-  }
 
-  create() {
-    this.loadMap();
+    if(this.gamePaused) {
+      if(KeyMapHandler.isDown('Pause', this.menuControlPlayer)) {
+        this.togglePause(this.menuControlPlayer);
+        this.menuControlPlayer = null;
+      }
+
+    } else {
+      for(let i = 0; i < GameState.state.players.length; i++) {
+        if(!KeyMapHandler.isDown('Pause', i)) continue;
+        this.togglePause(i);
+      }
+    }
   }
 
   shutdown() {
