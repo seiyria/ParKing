@@ -10,7 +10,7 @@ export abstract class Entity extends Phaser.Sprite {
     if(this.isDebug) this.toggleDebug(true);
   }
 
-  toggleDebug(isDebug: boolean) {
+  public toggleDebug(isDebug: boolean) {
     this.isDebug = isDebug;
 
     if(this.body) this.body.debug = isDebug;

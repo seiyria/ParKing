@@ -37,4 +37,8 @@ export class ParkingSpace extends Entity {
     // World.container.addChild(this.graphics);
     */
 
+  load() {}
+  unload() {
+    // World.container.removeChild(this.graphics);
+  }
 }

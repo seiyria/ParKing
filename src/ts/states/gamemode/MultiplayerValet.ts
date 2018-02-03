@@ -71,7 +71,7 @@ export class MultiplayerValet extends GameMode {
 
         this.isFiringNextRound = false;
 
-      }, _.random(300, 900));
+      }, _.random(500, 1300));
 
     }
 

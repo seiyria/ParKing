@@ -21,6 +21,7 @@ export abstract class GameMode extends Phaser.State {
   private groupCars: Phaser.Group;
 
   private physicsCars: Phaser.Physics.P2.CollisionGroup;
+  private physicsWalls: Phaser.Physics.P2.CollisionGroup;
 
   private isDebug: boolean;
 
@@ -79,14 +80,17 @@ export abstract class GameMode extends Phaser.State {
 
     this.fixParkingSpaces();
 
-    this.game.world.bringToTop(this.groupParkingSpaces);
-    this.game.world.bringToTop(this.groupCars);
+    this.moveGroups();
 
     this.map.setCollision([3], true, wallLayer);
-    this.game.physics.p2.convertTilemap(this.map, wallLayer);
+    const allTiles = this.game.physics.p2.convertTilemap(this.map, wallLayer);
     this.game.physics.p2.setBoundsToWorld(true, true, true, true, false);
 
     this.createPhysicsGroups();
+    allTiles.forEach(tile => {
+      tile.setCollisionGroup(this.physicsWalls);
+      tile.collides(this.physicsCars);
+    });
   }
 
   private addGroups() {
@@ -98,6 +102,11 @@ export abstract class GameMode extends Phaser.State {
     this.groupCars.physicsBodyType = Phaser.Physics.P2JS;
   }
 
+  private moveGroups() {
+    this.game.world.bringToTop(this.groupParkingSpaces);
+    this.game.world.bringToTop(this.groupCars);
+  }
+
   private startPhysics() {
     this.game.physics.startSystem(Phaser.Physics.P2JS);
 
@@ -107,6 +116,7 @@ export abstract class GameMode extends Phaser.State {
 
   private createPhysicsGroups() {
     this.physicsCars = this.game.physics.p2.createCollisionGroup();
+    this.physicsWalls = this.game.physics.p2.createCollisionGroup();
   }
 
   private fixParkingSpaces() {
@@ -134,10 +144,12 @@ export abstract class GameMode extends Phaser.State {
     });
   }
 
-  protected spawnCar(CarProto, { x, y, minVelX, maxVelX }, playerIdx: number) {
-    const car: ControlledEntity = new CarProto(this.game, x - 32, y - 32);
+  protected spawnCar(CarProto, { x, y, minVelX, maxVelX, rotate }, playerIdx: number) {
 
-    const decidedVelX = _.random(minVelX, maxVelX) * 30;
+    const xMod = rotate < 0 ? -32 : 32;
+    const car: ControlledEntity = new CarProto(this.game, x - xMod, y - 32);
+
+    const decidedVelX = _.random(minVelX, maxVelX) * 40;
 
     this.game.add.existing(car);
     this.groupCars.add(car);
@@ -146,10 +158,17 @@ export abstract class GameMode extends Phaser.State {
 
     this.game.physics.p2.enable(car);
     car.body.setRectangle(car.width, car.height);
+    car.body.velocity.x = rotate < 0 ? -decidedVelX : decidedVelX;
+    car.body.angle = rotate;
+
     car.body.setCollisionGroup(this.physicsCars);
-    car.body.collides([this.physicsCars]);
-    car.body.velocity.x = decidedVelX;
-    car.body.angle = decidedVelX > 0 ? 90 : -90;
+    car.body.collides(this.physicsCars, () => {
+      car.handleCarCollision();
+    });
+
+    car.body.collides(this.physicsWalls, () => {
+      car.handleWallCollision();
+    });
 
     car.create({ myPlayer: playerIdx, thrust: decidedVelX, isDebug: this.isDebug });
 
@@ -157,14 +176,29 @@ export abstract class GameMode extends Phaser.State {
   }
 
   protected getSpawnPoint(idx: number) {
-    const spawn = _.sample(_.filter((<any>this.map.objects).CarSpawns, ['properties.player', idx]));
+    let spawn = null;
+    const numPlayers = GameState.state.players.length;
+    const carSpawns = (<any>this.map.objects).CarSpawns;
+
+    // 1 player can spawn anywhere
+    if(numPlayers === 1) spawn = _.sample(carSpawns);
+
+    // 2 players will get sides
+    if(numPlayers === 2) {
+      spawn = _.sample(_.filter(carSpawns, (spawn) => Math.floor(spawn.properties.player / 2) === idx));
+    }
+
+    // more than 2 players means they spawn in their set spots
+    if(numPlayers > 2) spawn = _.sample(_.filter(carSpawns, ['properties.player', idx]));
+
     if(!spawn) throw new Error(`No spawn on map ${this.chosenMapName} for player ${idx}.`);
 
     return {
       x: spawn.x,
       y: spawn.y,
       minVelX: spawn.properties.minVelX,
-      maxVelX: spawn.properties.maxVelX
+      maxVelX: spawn.properties.maxVelX,
+      rotate: spawn.properties.rotate
     };
   }
 }

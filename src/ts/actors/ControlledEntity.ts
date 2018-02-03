@@ -1,11 +1,10 @@
 
-import * as _ from 'lodash';
 
 import { Entity } from './Entity';
-import { ConfigManager } from '../global/config';
-import { ResourceManager } from '../global/resources';
-import { GameState } from '../global/gamestate';
 import { KeyMapHandler } from '../global/key';
+import { GameState } from '../global/gamestate';
+
+// TODO tire tracks: https://jsfiddle.net/jolmos/yeL4Lbdh/
 
 export abstract class ControlledEntity extends Entity {
 
@@ -13,12 +12,13 @@ export abstract class ControlledEntity extends Entity {
 
   protected wheelSprites: Phaser.Group;
 
-  protected maxSteer: number;
-  protected wheelRotationSpeed: number;
   protected thrust: number;
   protected brakeForce: number;
-  protected brakeHold: number
+  protected brakeHold: number;
   protected turnAngle: number;
+  protected mass: number;
+  protected damping: number;
+  protected reverseThrustMod: number;
 
   protected baseThrust: number;
 
@@ -28,28 +28,31 @@ export abstract class ControlledEntity extends Entity {
     super.create(opts);
 
     opts.wheelPositions = opts.wheelPositions || [
-      [-(this.width / 2) - 5, -this.height / 2],
-      [(this.width / 2),      -this.height / 2],
-      [-(this.width / 2) - 5, (this.height / 2) - 10],
-      [(this.width / 2),      (this.height / 2) - 10]
+      [-(this.width / 2) - 3, -this.height / 2],
+      [(this.width / 2)  - 1, -this.height / 2],
+      [-(this.width / 2) - 3, (this.height / 2) - 10],
+      [(this.width / 2)  - 1, (this.height / 2) - 10]
     ];
 
-    if(!this.wheelRotationSpeed) this.wheelRotationSpeed = 300;
-    if(!this.maxSteer)    this.maxSteer = 100;
-    if(!this.thrust)      this.thrust = 100;
-    if(!this.brakeForce)  this.brakeForce = 0.7;
-    if(!this.brakeHold)   this.brakeHold = 10;
-    if(!this.turnAngle)   this.turnAngle = 30;
-    if(!this.body.mass)   this.body.mass = 1;
+    if(!this.thrust)              this.thrust = 100;
+    if(!this.brakeForce)          this.brakeForce = 0.7;
+    if(!this.brakeHold)           this.brakeHold = 10;
+    if(!this.turnAngle)           this.turnAngle = 45;
+    if(!this.reverseThrustMod)    this.reverseThrustMod = 4;
+
+    if(!this.mass)                this.mass = 1;
+    if(!this.damping)             this.damping = 0.9;
+
+    this.body.mass = this.mass;
+    this.body.damping = this.damping;
 
     this.baseThrust = this.thrust;
 
-    this.body.damping = 0.9;
     this.wheelSprites = this.game.add.group(this);
 
     for(let i = 0; i < opts.wheelPositions.length; i++) {
       const [x, y] = opts.wheelPositions[i];
-      const wheelSprite = this.game.make.sprite(x, y, 'car-wheel');
+      const wheelSprite = this.game.add.sprite(x, y, 'car-wheel');
       this.wheelSprites.addChild(wheelSprite);
     }
   }
@@ -72,32 +75,80 @@ export abstract class ControlledEntity extends Entity {
       this.body.setZeroRotation();
     }
 
+    const dampenedAngle = this.dampenAngleBasedOnThrust(angle);
+
     if(angle !== 0) {
-      this.body.rotateRight(this.dampenAngleBasedOnThrust(angle));
+      this.body.rotateRight(dampenedAngle);
     }
 
-    this.updateWheelAngles(this.dampenAngleBasedOnThrust(angle / 2));
+    this.updateWheelAngles(dampenedAngle / 2);
 
     this.body.thrust(this.thrust);
 
     if(KeyMapHandler.isDown('Brake', this.myPlayer, false)) {
-      this.thrust -= this.brakeForce;
+      this.loseThrust(this.brakeForce);
     }
 
-    this.thrust -= this.brakeForce / this.brakeHold;
-    if(this.thrust <= 0) this.thrust = 0;
+    // lose way more thrust while turning
+    let thrustLoss = this.brakeForce / this.brakeHold;
+    if(this.angle !== 0) thrustLoss *= 3;
+
+    this.loseThrust(thrustLoss);
   }
 
   private dampenAngleBasedOnThrust(angle: number): number {
-    return angle * (this.thrust / this.baseThrust);
+    return angle * (Math.abs(this.thrust) / this.baseThrust);
   }
 
   private updateWheelAngles(angle: number) {
-    this.wheelSprites.children.forEach(wheel => (<Phaser.Sprite>wheel).angle = angle);
+    this.wheelSprites.children.forEach((wheel) => {
+      (<Phaser.Sprite>wheel).angle = angle;
+    });
+  }
+
+  public handleCarCollision() {
+    if(this.isHalted) return;
+
+    this.loseThrust(20);
+    GameState.screenShake(3, 5);
+  }
+
+  public handleWallCollision() {
+    if(this.isHalted) return;
+
+    // hitting a wall on a right angle = reverse thrust. otherwise you just graze it and lose thrust.
+    const cleanAngle = (Math.abs(this.body.angle) % 90) / 45;
+    if(cleanAngle > 1) {
+      this.reverseThrust();
+      GameState.screenShake(5, 5);
+    } else {
+      this.loseThrust(10);
+    }
+  }
+
+  private reverseThrust() {
+    this.thrust = -this.thrust / this.reverseThrustMod;
+  }
+
+  private loseThrust(lost: number) {
+
+    // if we hit a wall and are going backwards
+    if(this.thrust < 0) {
+
+      // you lose thrust *much* faster in reverse
+      this.thrust += (lost * this.reverseThrustMod);
+      if(this.thrust > 0) this.thrust = 0;
+      return;
+    }
+
+    // if we're driving
+    this.thrust -= lost;
+    if(this.thrust < 0) this.thrust = 0;
   }
 
   public halt() {
     this.isHalted = true;
+    this.thrust = 0;
     this.body.setZeroRotation();
     this.body.angularDamping = 0.9;
     this.updateWheelAngles(0);
