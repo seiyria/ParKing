@@ -5,6 +5,9 @@ type Key = 'Left' | 'Right' | 'Up' | 'Down'
   | 'Confirm' | 'Back' | 'Pause' | 'Debug'
   | 'Brake' | 'SteerLeft' | 'SteerRight';
 
+// TODO redo key handling so there is a hash (use window.onkeydown etc)
+// TODO also include gamepad
+
 const KeyToPhaserKey = {
   Up:         Phaser.Keyboard.UP,
   Down:       Phaser.Keyboard.DOWN,

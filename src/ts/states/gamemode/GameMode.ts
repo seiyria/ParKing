@@ -9,7 +9,8 @@ import { ControlledEntity } from '../../actors/ControlledEntity';
 import { KeyMapHandler } from '../../global/key';
 
 const MAP_GIDS = {
-  PARKING_SPACE_PLAIN: 17
+  PARKING_SPACE_PLAIN: 17,
+  DECOR_ARROW: 21
 };
 
 export abstract class GameMode extends PausableMenu {
@@ -18,11 +19,13 @@ export abstract class GameMode extends PausableMenu {
   protected chosenMapName: string;
   protected map: Phaser.Tilemap;
 
-  private groupParkingSpaces: Phaser.Group;
-  private groupCars: Phaser.Group;
+  protected groupParkingSpaces: Phaser.Group;
+  protected groupDecoration: Phaser.Group;
+  protected groupCars: Phaser.Group;
 
   private physicsCars: Phaser.Physics.P2.CollisionGroup;
   private physicsWalls: Phaser.Physics.P2.CollisionGroup;
+  private physicsSpaces: Phaser.Physics.P2.CollisionGroup;
 
   private isDebug: boolean;
 
@@ -80,6 +83,23 @@ export abstract class GameMode extends PausableMenu {
 
     const wallLayer = this.map.createLayer('Walls');
 
+    this.map.setCollision([3], true, wallLayer);
+    const allTiles = this.game.physics.p2.convertTilemap(this.map, wallLayer);
+    this.game.physics.p2.setBoundsToWorld(true, true, true, true, false);
+
+    this.createPhysicsGroups();
+
+    this.createAllFromObjects();
+
+    this.moveGroups();
+
+    allTiles.forEach(tile => {
+      tile.setCollisionGroup(this.physicsWalls);
+      tile.collides(this.physicsCars);
+    });
+  }
+
+  private createAllFromObjects() {
     this.map.createFromObjects(
       'Parking',
       MAP_GIDS.PARKING_SPACE_PLAIN,
@@ -91,24 +111,27 @@ export abstract class GameMode extends PausableMenu {
       ParkingSpace
     );
 
+    this.map.createFromObjects(
+      'Decoration',
+      MAP_GIDS.DECOR_ARROW,
+      'parking-objects',
+      4,
+      true,
+      false,
+      this.groupDecoration
+    );
+
     this.fixParkingSpaces();
 
-    this.moveGroups();
-
-    this.map.setCollision([3], true, wallLayer);
-    const allTiles = this.game.physics.p2.convertTilemap(this.map, wallLayer);
-    this.game.physics.p2.setBoundsToWorld(true, true, true, true, false);
-
-    this.createPhysicsGroups();
-    allTiles.forEach(tile => {
-      tile.setCollisionGroup(this.physicsWalls);
-      tile.collides(this.physicsCars);
-    });
+    this.fixRotations(this.groupParkingSpaces);
+    this.fixRotations(this.groupDecoration);
   }
 
   private addGroups() {
 
     this.groupParkingSpaces = this.game.add.group();
+
+    this.groupDecoration = this.game.add.group();
 
     this.groupCars = this.game.add.group();
     this.groupCars.enableBody = true;
@@ -117,6 +140,7 @@ export abstract class GameMode extends PausableMenu {
 
   private moveGroups() {
     this.game.world.bringToTop(this.groupParkingSpaces);
+    this.game.world.bringToTop(this.groupDecoration);
     this.game.world.bringToTop(this.groupCars);
   }
 
@@ -130,6 +154,7 @@ export abstract class GameMode extends PausableMenu {
   private createPhysicsGroups() {
     this.physicsCars = this.game.physics.p2.createCollisionGroup();
     this.physicsWalls = this.game.physics.p2.createCollisionGroup();
+    this.physicsSpaces = this.game.physics.p2.createCollisionGroup();
   }
 
   private fixParkingSpaces() {
@@ -137,26 +162,64 @@ export abstract class GameMode extends PausableMenu {
     twoSpaces[0].frame = 1;
     twoSpaces[1].frame = 2;
 
-    this.groupParkingSpaces.children.forEach(space => {
+    this.groupParkingSpaces.children.forEach((space: Phaser.Sprite) => {
+      this.game.physics.p2.enable(space);
+      space.body.setRectangle(space.width, space.height);
+      space.body.kinematic = true;
+    });
+  }
+
+  private fixRotations(layer: Phaser.Group) {
+
+    layer.children.forEach((space: Phaser.Sprite) => {
+
+      if(space.body) {
+        space.body.rotation = space.rotation;
+      }
 
       // apparently phaser doesn't like rotations
       switch(Phaser.Math.radToDeg(space.rotation)) {
+
+        case 0: {
+          if(space.body) {
+            space.body.x += 32;
+            space.body.y += 32;
+          }
+          break;
+        }
+
         case 90: {
-          space.position.x += 64;
-          space.position.y += 64;
+          if(space.body) {
+            space.body.x += 32;
+            space.body.y += 96;
+          } else {
+            space.position.x += 64;
+            space.position.y += 64;
+          }
           break;
         }
 
         case -90: {
-          space.position.x -= 64;
-          space.position.y += 64;
+          if(space.body) {
+            space.body.x -= 32;
+            space.body.y += 32;
+          } else {
+            space.position.x -= 64;
+            space.position.y += 64;
+          }
           break;
         }
 
         case -180: {
-          space.position.y += 128;
+          if(space.body) {
+            space.body.x -= 32;
+            space.body.y += 96;
+          } else {
+            space.position.y += 128;
+          }
           break;
         }
+
       }
     });
   }
@@ -179,13 +242,9 @@ export abstract class GameMode extends PausableMenu {
     car.body.angle = rotate;
 
     car.body.setCollisionGroup(this.physicsCars);
-    car.body.collides(this.physicsCars, () => {
-      car.handleCarCollision();
-    });
 
-    car.body.collides(this.physicsWalls, () => {
-      car.handleWallCollision();
-    });
+    car.body.collides(this.physicsCars, () => car.handleCarCollision());
+    car.body.collides(this.physicsWalls, () => car.handleWallCollision());
 
     car.create({ myPlayer: playerIdx, thrust: decidedVelX, isDebug: this.isDebug });
 
@@ -217,5 +276,78 @@ export abstract class GameMode extends PausableMenu {
       maxVelX: spawn.properties.maxVelX,
       rotate: spawn.properties.rotate
     };
+  }
+
+  protected checkParkingOverlaps() {
+
+    // TODO each car gets 1 score, and each space gets 1 score. the car in the space the deepest scores that space
+
+    const allScores = [];
+
+    this.game.physics.p2.pause();
+
+    this.groupParkingSpaces.children.forEach((space: Phaser.Sprite, idx) => {
+      space.body.kinematic = false;
+      space.body.static = false;
+
+      allScores[idx] = [];
+
+      space.body.onBeginContact.add((phaserp2body, p2body, shapeA, shapeB, contactEquations) => {
+        if(phaserp2body.sprite instanceof ParkingSpace) return;
+
+        const contactEq = contactEquations[0];
+        const penetrationVec = contactEq.penetrationVec;
+
+        p2.vec2.add(penetrationVec, contactEq.contactPointB, contactEq.bodyB.position);
+        p2.vec2.sub(penetrationVec, penetrationVec, contactEq.bodyA.position);
+        p2.vec2.sub(penetrationVec, penetrationVec, contactEq.contactPointA);
+
+        const _score = {
+          depth: p2.vec2.dot(contactEq.penetrationVec, contactEq.normalA),
+          body: shapeB // TODO there should probably be something else passed here, like the car inst
+        };
+
+        allScores[idx].push(_score);
+
+      });
+
+    });
+
+    // take one step to calculate contact
+    this.game.physics.p2.world.step(this.game.physics.p2.frameRate);
+
+    // 500ms should be enough to finish calculating score
+    setTimeout(() => {
+      finishContact();
+    }, 500);
+
+    const finishContact = () => {
+
+      // TODO do all calculations
+
+      this.groupParkingSpaces.children.forEach((space: Phaser.Sprite) => {
+        space.body.kinematic = true;
+      });
+
+      this.game.physics.p2.resume();
+    };
+
+    /*
+    // cars are the top level iterator because they can be in multiple spaces and we only want them to score once
+    this.groupCars.children.forEach((car: Phaser.Sprite) => {
+
+      const allOverlappingSpaces = [];
+
+      this.groupParkingSpaces.children.forEach((space: Phaser.Sprite) => {
+        if(!space.body.data.aabb.overlaps(car.body.data.aabb)) return;
+
+        allOverlappingSpaces.push(space);
+      });
+
+      allOverlappingSpaces.forEach(space => {
+
+      });
+    });
+    */
   }
 }
