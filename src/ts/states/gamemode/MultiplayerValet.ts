@@ -120,7 +120,10 @@ export class MultiplayerValet extends GameMode {
 
   private done() {
     this.isDone = true;
-    this.checkParkingOverlaps();
+
+    setTimeout(() => {
+      this.checkParkingOverlaps();
+    }, 2000);
   }
 
 }

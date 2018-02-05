@@ -8,6 +8,8 @@ import { GameState } from '../global/gamestate';
 
 export abstract class ControlledEntity extends Entity {
 
+  public gameid: number;
+
   private myPlayer: number;
 
   protected wheelSprites: Phaser.Group;

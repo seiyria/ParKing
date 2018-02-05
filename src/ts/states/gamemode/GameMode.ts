@@ -29,6 +29,8 @@ export abstract class GameMode extends PausableMenu {
 
   private isDebug: boolean;
 
+  private lastCarId = 0;
+
   init() {
     GameState.resetPlayerScores();
   }
@@ -162,10 +164,29 @@ export abstract class GameMode extends PausableMenu {
     twoSpaces[0].frame = 1;
     twoSpaces[1].frame = 2;
 
-    this.groupParkingSpaces.children.forEach((space: Phaser.Sprite) => {
+    this.groupParkingSpaces.children.forEach((space: ParkingSpace, idx) => {
       this.game.physics.p2.enable(space);
+
+      space.gameid = idx;
+
       space.body.setRectangle(space.width, space.height);
-      space.body.kinematic = true;
+      space.body.setCollisionGroup(this.physicsSpaces);
+      space.body.collides([this.physicsCars]);
+      space.body.data.shapes[0].sensor = true;
+
+      space.body.onBeginContact.add((phaserp2body, p2body, shapeA, shapeB, contactEquations) => {
+        const gid = _.get(phaserp2body, 'sprite.gameid');
+        if(!_.isNumber(gid)) return;
+
+        space.lastPhysicsCollisions[gid] = [phaserp2body, p2body, shapeA, shapeB, contactEquations];
+      });
+
+      space.body.onEndContact.add((phaserp2body) => {
+        const gid = _.get(phaserp2body, 'sprite.gameid');
+        if(!_.isNumber(gid)) return;
+
+        delete space.lastPhysicsCollisions[gid];
+      });
     });
   }
 
@@ -245,8 +266,10 @@ export abstract class GameMode extends PausableMenu {
 
     car.body.collides(this.physicsCars, () => car.handleCarCollision());
     car.body.collides(this.physicsWalls, () => car.handleWallCollision());
+    car.body.collides([this.physicsSpaces]);
 
     car.create({ myPlayer: playerIdx, thrust: decidedVelX, isDebug: this.isDebug });
+    car.gameid = this.lastCarId++;
 
     return car;
   }
@@ -282,56 +305,31 @@ export abstract class GameMode extends PausableMenu {
 
     // TODO each car gets 1 score, and each space gets 1 score. the car in the space the deepest scores that space
 
-    const allScores = [];
+    this.groupParkingSpaces.children.forEach((space: ParkingSpace) => {
 
-    this.game.physics.p2.pause();
-
-    this.groupParkingSpaces.children.forEach((space: Phaser.Sprite, idx) => {
-      space.body.kinematic = false;
-      space.body.static = false;
-
-      allScores[idx] = [];
-
-      space.body.onBeginContact.add((phaserp2body, p2body, shapeA, shapeB, contactEquations) => {
-        if(phaserp2body.sprite instanceof ParkingSpace) return;
+      _.forEach(space.lastPhysicsCollisions, (val) => {
+        const [contactEquations] = val;
 
         const contactEq = contactEquations[0];
+        if(!contactEq) return;
+
         const penetrationVec = contactEq.penetrationVec;
 
-        p2.vec2.add(penetrationVec, contactEq.contactPointB, contactEq.bodyB.position);
-        p2.vec2.sub(penetrationVec, penetrationVec, contactEq.bodyA.position);
+        p2.vec2.add(penetrationVec, contactEq.contactPointB, contactEq.shapeB.position);
+        p2.vec2.sub(penetrationVec, penetrationVec, contactEq.shapeA.position);
         p2.vec2.sub(penetrationVec, penetrationVec, contactEq.contactPointA);
 
-        const _score = {
-          depth: p2.vec2.dot(contactEq.penetrationVec, contactEq.normalA),
-          body: shapeB // TODO there should probably be something else passed here, like the car inst
+        const score = {
+          depth: p2.vec2.dot(contactEq.penetrationVec, contactEq.normalA)
         };
 
-        allScores[idx].push(_score);
-
+        console.log(score);
       });
 
     });
 
-    // take one step to calculate contact
-    this.game.physics.p2.world.step(this.game.physics.p2.frameRate);
 
-    // 500ms should be enough to finish calculating score
-    setTimeout(() => {
-      finishContact();
-    }, 500);
-
-    const finishContact = () => {
-
-      // TODO do all calculations
-
-      this.groupParkingSpaces.children.forEach((space: Phaser.Sprite) => {
-        space.body.kinematic = true;
-      });
-
-      this.game.physics.p2.resume();
-    };
-
+    // TODO check if car alignment matches parking space for score. ie, no parking horizontally in a vertical space
     /*
     // cars are the top level iterator because they can be in multiple spaces and we only want them to score once
     this.groupCars.children.forEach((car: Phaser.Sprite) => {
