@@ -164,6 +164,11 @@ export abstract class GameMode extends PausableMenu {
     twoSpaces[0].frame = 1;
     twoSpaces[1].frame = 2;
 
+    // TODO world.off this and also use this to get contact equations and assign them to the right parking space
+    this.game.physics.p2.world.on("beginContact", (phaserp2body, p2body, shapeA, shapeB, contactEquations) => {
+      console.log(phaserp2body, p2body, shapeA, shapeB, contactEquations);
+    }, this);
+
     this.groupParkingSpaces.children.forEach((space: ParkingSpace, idx) => {
       this.game.physics.p2.enable(space);
 
@@ -178,7 +183,11 @@ export abstract class GameMode extends PausableMenu {
         const gid = _.get(phaserp2body, 'sprite.gameid');
         if(!_.isNumber(gid)) return;
 
-        space.lastPhysicsCollisions[gid] = [phaserp2body, p2body, shapeA, shapeB, contactEquations];
+        console.log(contactEquations)
+
+        space.lastPhysicsCollisions[gid] = { 
+          phaserp2body, p2body, shapeA, shapeB, contactEquation: contactEquations[0]
+        };
       });
 
       space.body.onEndContact.add((phaserp2body) => {
@@ -308,22 +317,22 @@ export abstract class GameMode extends PausableMenu {
     this.groupParkingSpaces.children.forEach((space: ParkingSpace) => {
 
       _.forEach(space.lastPhysicsCollisions, (val) => {
-        const [contactEquations] = val;
+        const { shapeA, shapeB, contactEquation } = val;
+        console.log('end', val);
 
-        const contactEq = contactEquations[0];
-        if(!contactEq) return;
+        if(!contactEquation) return;
 
-        const penetrationVec = contactEq.penetrationVec;
+        const penetrationVec = contactEquation.penetrationVec;
 
-        p2.vec2.add(penetrationVec, contactEq.contactPointB, contactEq.shapeB.position);
-        p2.vec2.sub(penetrationVec, penetrationVec, contactEq.shapeA.position);
-        p2.vec2.sub(penetrationVec, penetrationVec, contactEq.contactPointA);
+        p2.vec2.add(penetrationVec, contactEquation.contactPointB, contactEquation.shapeB.position);
+        p2.vec2.sub(penetrationVec, penetrationVec, contactEquation.shapeA.position);
+        p2.vec2.sub(penetrationVec, penetrationVec, contactEquation.contactPointA);
 
         const score = {
-          depth: p2.vec2.dot(contactEq.penetrationVec, contactEq.normalA)
+          depth: p2.vec2.dot(contactEquation.penetrationVec, contactEquation.normalA)
         };
 
-        console.log(score);
+        console.log(score, contactEquation.penetrationVec, contactEquation.normalA);
       });
 
     });
