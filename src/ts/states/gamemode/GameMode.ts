@@ -165,8 +165,10 @@ export abstract class GameMode extends PausableMenu {
     twoSpaces[1].frame = 2;
 
     // TODO world.off this and also use this to get contact equations and assign them to the right parking space
-    this.game.physics.p2.world.on("beginContact", (phaserp2body, p2body, shapeA, shapeB, contactEquations) => {
-      console.log(phaserp2body, p2body, shapeA, shapeB, contactEquations);
+
+    // TODO put this on a branch and instead try to calculate the center and the angle of the car based on the center of all of the parking spaces (a certain distance, maybe 20px apart is too far)
+    this.game.physics.p2.world.on("beginContact", ({ bodyA, bodyB, shapeA, shapeB, contactEquations }) => {
+      console.log('first', bodyA, bodyB, shapeA, shapeB, contactEquations);
     }, this);
 
     this.groupParkingSpaces.children.forEach((space: ParkingSpace, idx) => {
@@ -183,9 +185,9 @@ export abstract class GameMode extends PausableMenu {
         const gid = _.get(phaserp2body, 'sprite.gameid');
         if(!_.isNumber(gid)) return;
 
-        console.log(contactEquations)
+        console.log('second', contactEquations)
 
-        space.lastPhysicsCollisions[gid] = { 
+        space.lastPhysicsCollisions[gid] = {
           phaserp2body, p2body, shapeA, shapeB, contactEquation: contactEquations[0]
         };
       });
