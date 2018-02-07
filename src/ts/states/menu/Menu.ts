@@ -186,17 +186,22 @@ export abstract class Menu extends Phaser.State {
     return newOpt;
   }
 
-  private hideAllOptions() {
+  private hideAllOptions(): boolean {
+    // don't hide all when there's only one menu to hide in
+    if(this.options.length === 1) return false;
+
     for(let i = 0; i < this.options.length; i++) {
       this.options[i].forEach(opt => {
         opt.textObj.visible = false;
       });
     }
+
+    return true;
   }
 
   protected recalculateVisibleOptions() {
 
-    this.hideAllOptions();
+    const didHide = this.hideAllOptions();
 
     const optionHeight = this.currentOptions[0].textObj.y;
     const heightBuffer = this.titleText ? this.titleText.height + this.menuVerticalOffset : 0;
@@ -204,7 +209,7 @@ export abstract class Menu extends Phaser.State {
     const numOptsVisible = optionsVisible.length;
     if(numOptsVisible === this.currentOptions.length) {
       this.visibleOptions = this.currentOptions;
-      this.visibleOptions.forEach(opt => opt.textObj.visible = true);
+      if(didHide) this.visibleOptions.forEach(opt => opt.textObj.visible = true);
       return;
     }
 

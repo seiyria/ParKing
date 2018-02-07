@@ -33,11 +33,8 @@ export abstract class GameMode extends PausableMenu {
 
   private lastCarId = 0;
 
-  init() {
-    GameState.resetGameForInit();
-  }
-
   create() {
+    GameState.resetGameForInit();
     super.create();
     this.loadMap();
   }

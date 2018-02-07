@@ -5,6 +5,7 @@ type Key = 'Left' | 'Right' | 'Up' | 'Down'
   | 'Confirm' | 'Back' | 'Pause' | 'Debug'
   | 'Brake' | 'SteerLeft' | 'SteerRight';
 
+
 const KeyToPhaserKey = {
   Up:         Phaser.Keyboard.UP,
   Down:       Phaser.Keyboard.DOWN,

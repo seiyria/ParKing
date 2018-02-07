@@ -87,6 +87,11 @@ export class GameModeMenu extends Menu {
       this.recalculateVisibleOptions();
       return;
     }
+
+    if(KeyMapHandler.isDown('Back', this.menuControlPlayer)) {
+      GameState.popState();
+      return;
+    }
   }
 
   shutdown() {

@@ -87,7 +87,7 @@ export class VariantsMenu extends Menu {
   public update() {
     super.update();
 
-    if(KeyMapHandler.isDown('Back', 0)) {
+    if(KeyMapHandler.isDown('Back', this.menuControlPlayer)) {
       GameState.popState();
       return;
     }

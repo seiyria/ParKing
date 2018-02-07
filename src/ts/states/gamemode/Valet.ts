@@ -88,7 +88,7 @@ export abstract class Valet extends GameMode {
       this.carsText = this.game.add.text(10, 10, 'Cars Left: 24', Helpers.defaultTextOptions());
     }
 
-    this.carsText.text = `Cars Left: ${this.carsLeft}`;
+    this.carsText.setText(`Cars Left: ${this.carsLeft}`);
   }
 
   private chooseCar(player: number): ControlledEntity {
