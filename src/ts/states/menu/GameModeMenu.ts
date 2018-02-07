@@ -1,10 +1,9 @@
 
-import * as _ from 'lodash';
-
 import { Menu } from './Menu';
 import { KeyMapHandler } from '../../global/key';
 import { GameState } from '../../global/gamestate';
 import { ConfigManager } from '../../global/config';
+import { Helpers } from '../../global/helpers';
 
 const PARKING_1P_MENU   = 0;
 const PARKING_MP_MENU   = 1;
@@ -17,8 +16,10 @@ export class GameModeMenu extends Menu {
   protected menuDescs = [
     'Park your cars as best as you can and get a new high score!',
     'Park your cars with your friends and compete to see who parks the best!',
-    'Try to get under par while par king your cars!'
+    'Try to get under par while par king your cars! [not yet implemented]'
   ];
+
+  protected menuDescText: Phaser.Text;
 
   constructor() {
     super({ menuVerticalOffset: 300, menuOptionSpacing: 100, menuAlign: 'center' });
@@ -55,10 +56,21 @@ export class GameModeMenu extends Menu {
 
     this.recalculateVisibleOptions();
     this.selectedMenu = ConfigManager.gameMenu;
+
+    const titleOpts = Helpers.defaultTextOptions();
+    titleOpts.align = 'center';
+    titleOpts.fontSize = 20;
+    titleOpts.wordWrap = true;
+    titleOpts.wordWrapWidth = 500;
+    this.menuDescText = this.game.add.text(0, 200, this.menuDescs[this.selectedMenu], titleOpts);
+    this.menuDescText.anchor.set(0.5);
   }
 
   update() {
     super.update();
+
+    this.menuDescText.setText(this.menuDescs[this.selectedMenu]);
+    this.menuDescText.position.x = this.game.width / 2;
 
     if(KeyMapHandler.isDown('Left', this.menuControlPlayer)) {
       this.selectedMenu--;
