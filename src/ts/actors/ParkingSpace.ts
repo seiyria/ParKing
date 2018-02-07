@@ -6,7 +6,6 @@ import { ResourceManager } from '../global/resources';
 export class ParkingSpace extends Entity {
 
   public gameid: number;
-  public lastPhysicsCollisions: any = {};
 
   public get isHandicap(): boolean {
     return this.frame === 1;

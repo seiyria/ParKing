@@ -13,6 +13,8 @@ const MAP_GIDS = {
   DECOR_ARROW: 21
 };
 
+const GOOD_PARKING_ANGLE_DIFF = 10;
+
 export abstract class GameMode extends PausableMenu {
 
   protected possibleMaps: string[] = [];
@@ -163,92 +165,38 @@ export abstract class GameMode extends PausableMenu {
     const twoSpaces = _.sampleSize(this.groupParkingSpaces.children, 2);
     twoSpaces[0].frame = 1;
     twoSpaces[1].frame = 2;
-
-    // TODO world.off this and also use this to get contact equations and assign them to the right parking space
-
-    // TODO put this on a branch and instead try to calculate the center and the angle of the car based on the center of all of the parking spaces (a certain distance, maybe 20px apart is too far)
-    this.game.physics.p2.world.on("beginContact", ({ bodyA, bodyB, shapeA, shapeB, contactEquations }) => {
-      console.log('first', bodyA, bodyB, shapeA, shapeB, contactEquations);
-    }, this);
-
-    this.groupParkingSpaces.children.forEach((space: ParkingSpace, idx) => {
-      this.game.physics.p2.enable(space);
-
-      space.gameid = idx;
-
-      space.body.setRectangle(space.width, space.height);
-      space.body.setCollisionGroup(this.physicsSpaces);
-      space.body.collides([this.physicsCars]);
-      space.body.data.shapes[0].sensor = true;
-
-      space.body.onBeginContact.add((phaserp2body, p2body, shapeA, shapeB, contactEquations) => {
-        const gid = _.get(phaserp2body, 'sprite.gameid');
-        if(!_.isNumber(gid)) return;
-
-        console.log('second', contactEquations)
-
-        space.lastPhysicsCollisions[gid] = {
-          phaserp2body, p2body, shapeA, shapeB, contactEquation: contactEquations[0]
-        };
-      });
-
-      space.body.onEndContact.add((phaserp2body) => {
-        const gid = _.get(phaserp2body, 'sprite.gameid');
-        if(!_.isNumber(gid)) return;
-
-        delete space.lastPhysicsCollisions[gid];
-      });
-    });
   }
 
   private fixRotations(layer: Phaser.Group) {
 
     layer.children.forEach((space: Phaser.Sprite) => {
 
-      if(space.body) {
-        space.body.rotation = space.rotation;
-      }
+      space.anchor.set(0.5);
 
       // apparently phaser doesn't like rotations
       switch(Phaser.Math.radToDeg(space.rotation)) {
 
         case 0: {
-          if(space.body) {
-            space.body.x += 32;
-            space.body.y += 32;
-          }
-          break;
-        }
-
-        case 90: {
-          if(space.body) {
-            space.body.x += 32;
-            space.body.y += 96;
-          } else {
-            space.position.x += 64;
-            space.position.y += 64;
-          }
-          break;
-        }
-
-        case -90: {
-          if(space.body) {
-            space.body.x -= 32;
-            space.body.y += 32;
-          } else {
-            space.position.x -= 64;
-            space.position.y += 64;
-          }
+          space.position.y += 32;
+          space.position.x += 32;
           break;
         }
 
         case -180: {
-          if(space.body) {
-            space.body.x -= 32;
-            space.body.y += 96;
-          } else {
-            space.position.y += 128;
-          }
+          space.position.y += 96;
+          space.position.x -= 32;
+          break;
+        }
+
+        case 90: {
+          space.position.x += 32;
+          space.position.y += 96;
+          break;
+        }
+
+        case -90: {
+          space.position.x -= 32;
+          space.position.y += 32;
           break;
         }
 
@@ -318,45 +266,30 @@ export abstract class GameMode extends PausableMenu {
 
     this.groupParkingSpaces.children.forEach((space: ParkingSpace) => {
 
-      _.forEach(space.lastPhysicsCollisions, (val) => {
-        const { shapeA, shapeB, contactEquation } = val;
-        console.log('end', val);
+      const spaceCenter = [space.centerX, space.centerY];
 
-        if(!contactEquation) return;
+      this.groupCars.children.forEach((car: ControlledEntity) => {
 
-        const penetrationVec = contactEquation.penetrationVec;
+        const carCenter = [car.centerX, car.centerY];
 
-        p2.vec2.add(penetrationVec, contactEquation.contactPointB, contactEquation.shapeB.position);
-        p2.vec2.sub(penetrationVec, penetrationVec, contactEquation.shapeA.position);
-        p2.vec2.sub(penetrationVec, penetrationVec, contactEquation.contactPointA);
+        const dist = Phaser.Math.distance(spaceCenter[0], spaceCenter[1], carCenter[0], carCenter[1]);
 
-        const score = {
-          depth: p2.vec2.dot(contactEquation.penetrationVec, contactEquation.normalA)
-        };
+        // too far away to park well
+        if(dist > 32) return;
 
-        console.log(score, contactEquation.penetrationVec, contactEquation.normalA);
-      });
+        let spaceAngle = Math.abs(space.angle) % 180;
+        let carAngle = Math.abs(car.angle) % 180;
 
-    });
+        if(spaceAngle > 90) spaceAngle -= 180;
+        if(carAngle > 90)   carAngle -= 180;
 
-
-    // TODO check if car alignment matches parking space for score. ie, no parking horizontally in a vertical space
-    /*
-    // cars are the top level iterator because they can be in multiple spaces and we only want them to score once
-    this.groupCars.children.forEach((car: Phaser.Sprite) => {
-
-      const allOverlappingSpaces = [];
-
-      this.groupParkingSpaces.children.forEach((space: Phaser.Sprite) => {
-        if(!space.body.data.aabb.overlaps(car.body.data.aabb)) return;
-
-        allOverlappingSpaces.push(space);
-      });
-
-      allOverlappingSpaces.forEach(space => {
+        // if your car isn't parked within 10 degrees of the parking space, then you suck at parking
+        if(carAngle - GOOD_PARKING_ANGLE_DIFF > spaceAngle || carAngle + GOOD_PARKING_ANGLE_DIFF < spaceAngle) return;
+        
+        console.log(space, car, spaceAngle, carAngle, dist);
 
       });
     });
-    */
+
   }
 }

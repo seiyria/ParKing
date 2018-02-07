@@ -16,6 +16,7 @@ export abstract class ControlledEntity extends Entity {
 
   protected thrust: number;
   protected brakeForce: number;
+  protected manualBrakeForce: number;
   protected brakeHold: number;
   protected turnAngle: number;
   protected mass: number;
@@ -38,11 +39,12 @@ export abstract class ControlledEntity extends Entity {
     ];
 
     if(!this.thrust)              this.thrust = 600;
-    if(!this.brakeForce)          this.brakeForce = 0.7;
+    if(!this.brakeForce)          this.brakeForce = 2;
+    if(!this.manualBrakeForce)    this.manualBrakeForce = 30;
     if(!this.brakeHold)           this.brakeHold = 10;
     if(!this.turnAngle)           this.turnAngle = 45;
     if(!this.reverseThrustMod)    this.reverseThrustMod = 4;
-    if(!this.thrustLossMult)      this.thrustLossMult = 4;
+    if(!this.thrustLossMult)      this.thrustLossMult = 0.3;
 
     if(!this.mass)                this.mass = 1;
     if(!this.damping)             this.damping = 0.8;
@@ -90,7 +92,7 @@ export abstract class ControlledEntity extends Entity {
     this.body.thrust(this.thrust);
 
     if(KeyMapHandler.isDown('Brake', this.myPlayer, false)) {
-      this.loseThrust(this.brakeForce);
+      this.loseThrust(this.manualBrakeForce);
     }
 
     // lose way more thrust while turning
@@ -103,7 +105,8 @@ export abstract class ControlledEntity extends Entity {
   }
 
   private dampenAngleBasedOnThrust(angle: number): number {
-    return angle * (Math.abs(this.thrust) / this.baseThrust);
+    if(this.isHalted) return 0;
+    return angle * Math.max(0.15, (Math.abs(this.thrust) / this.baseThrust));
   }
 
   private updateWheelAngles(angle: number) {
