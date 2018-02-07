@@ -46,7 +46,7 @@ export class GameState {
   }
 
   static startPlaying() {
-    GameState.pushState('MultiplayerValet');
+    GameState.pushState('SingleplayerValet');
     GameState.setPlaying(true);
   }
 
@@ -97,7 +97,7 @@ export class GameState {
     GameState._state.playerScores = [];
   }
 
-  public static resetGame() {  
+  public static resetGame() {
     GameState.setPlaying(false);
 
     for(let i = 0; i < 4; i++) {

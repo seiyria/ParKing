@@ -12,6 +12,10 @@ export abstract class ControlledEntity extends Entity {
 
   private myPlayer: number;
 
+  public get player(): number {
+    return this.myPlayer;
+  }
+
   protected wheelSprites: Phaser.Group;
 
   protected thrust: number;

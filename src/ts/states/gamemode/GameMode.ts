@@ -262,8 +262,6 @@ export abstract class GameMode extends PausableMenu {
 
   protected checkParkingOverlaps() {
 
-    // TODO each car gets 1 score, and each space gets 1 score. the car in the space the deepest scores that space
-
     this.groupParkingSpaces.children.forEach((space: ParkingSpace) => {
 
       const spaceCenter = [space.centerX, space.centerY];
@@ -277,6 +275,7 @@ export abstract class GameMode extends PausableMenu {
         // too far away to park well
         if(dist > 32) return;
 
+        // normalize the angles to be either 90 or 0
         let spaceAngle = Math.abs(space.angle) % 180;
         let carAngle = Math.abs(car.angle) % 180;
 
@@ -285,8 +284,13 @@ export abstract class GameMode extends PausableMenu {
 
         // if your car isn't parked within 10 degrees of the parking space, then you suck at parking
         if(carAngle - GOOD_PARKING_ANGLE_DIFF > spaceAngle || carAngle + GOOD_PARKING_ANGLE_DIFF < spaceAngle) return;
-        
-        console.log(space, car, spaceAngle, carAngle, dist);
+
+        let score = 10;
+        if(dist > 10)       score = 5;
+        else if(dist > 20)  score = 2;
+        else if(dist > 25)  score = 1;
+
+        console.log(score, car.player);
 
       });
     });

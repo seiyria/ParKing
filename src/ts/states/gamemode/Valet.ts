@@ -1,6 +1,6 @@
 
 import * as _ from 'lodash';
- import * as weighted from 'weighted';
+import * as weighted from 'weighted';
 
 import { GameMode } from './GameMode';
 import { Helpers } from '../../global/helpers';
@@ -11,20 +11,16 @@ import { ControlledEntity } from '../../actors/ControlledEntity';
 
 const VELOCITY_STOP_THRESHOLD = 1;
 
-export class MultiplayerValet extends GameMode {
-
-  protected possibleMaps = ['BasicArena'];
+export abstract class Valet extends GameMode {
 
   private carsText: Phaser.Text;
   private isDone: boolean;
   private isFiringNextRound: boolean;
-  private carsLeft: number;
+
+  protected carsLeft: number;
 
   create() {
     super.create();
-
-    // TODO make a variable for "game length" and make it scale to num of players (short = 2cpp, normal = 6cpp, long = 10cpp (cars per person)
-    this.carsLeft = 2;
     this.updateCarsText();
   }
 
@@ -131,5 +127,3 @@ export class MultiplayerValet extends GameMode {
   }
 
 }
-
-// TODO make every state implement shutdown to clean itself up
