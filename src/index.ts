@@ -7,9 +7,6 @@ import './index.css';
 
 import * as WebFont from 'webfontloader';
 
-import { KeyMapHandler } from './ts/global/key';
-import { GameState } from './ts/global/gamestate';
-
 import { Boot } from './ts/states/boot';
 import { Preloader } from './ts/states/Preloader';
 
@@ -53,7 +50,4 @@ Promise.all([fontPromise])
       height: window.innerHeight,
       renderer: Phaser.AUTO
     });
-
-    KeyMapHandler.init(game);
-    GameState.init(game);
   });

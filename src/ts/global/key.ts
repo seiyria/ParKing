@@ -1,10 +1,12 @@
 
 import * as Phaser from 'phaser-ce';
+import * as _ from 'lodash';
 
-type Key = 'Left' | 'Right' | 'Up' | 'Down'
+import { Subject } from 'rxjs';
+
+export type Key = 'Left' | 'Right' | 'Up' | 'Down'
   | 'Confirm' | 'Back' | 'Pause' | 'Debug'
   | 'Brake' | 'SteerLeft' | 'SteerRight';
-
 
 const KeyToPhaserKey = {
   Up:         Phaser.Keyboard.UP,
@@ -60,41 +62,69 @@ KeyToGamepad.Brake = KeyToGamepad.Down;
 KeyToGamepad.SteerLeft = KeyToGamepad.Left;
 KeyToGamepad.SteerRight = KeyToGamepad.Right;
 
-const FRAME_MOD = 10;
-const FRAMES_PERCENT = 80;
-const DROPPED_FRAMES = FRAME_MOD * (FRAMES_PERCENT / 100);
+export class InstantInputHandler {
 
-export class KeyMapHandler {
+  private game: Phaser.Game;
 
-  private static game: Phaser.Game;
-
-  public static init(game: Phaser.Game) {
-    if(KeyMapHandler.game) throw new Error('Cannot re-init KeyMapHandler');
-    KeyMapHandler.game = game;
+  public init(game: Phaser.Game) {
+    if(this.game) throw new Error('Cannot re-init KeyMapHandler');
+    this.game = game;
   }
 
-  public static isDown(key: Key, player = 0, useFrameLimiter = true) {
+  public isDown(key: Key, player = 0) {
 
-    // drop some input, useful for menus
-    if(useFrameLimiter && (KeyMapHandler.game.time.now / FRAME_MOD) % FRAME_MOD < DROPPED_FRAMES) return;
-
-    const keyboard = KeyMapHandler.isKeyDown(key, player);
-    const gamepad = KeyMapHandler.isGamepadDown(key, player);
+    const keyboard = this.isKeyDown(key, player);
+    const gamepad = this.isGamepadDown(key, player);
 
     return keyboard || gamepad;
   }
 
-  private static isKeyDown(key: Key, player = 0): boolean {
+  private isKeyDown(key: Key, player = 0): boolean {
     if(player !== 0) return false;
-    return KeyMapHandler.game.input.keyboard.isDown(KeyToPhaserKey[key]);
+    return this.game.input.keyboard.isDown(KeyToPhaserKey[key]);
   }
 
-  private static isGamepadDown(key: Key, player = 0): boolean {
-    const gamepadContainer = KeyMapHandler.game.input.gamepad;
+  private isGamepadDown(key: Key, player = 0): boolean {
+    const gamepadContainer = this.game.input.gamepad;
     const gamepad = gamepadContainer[`pad${player + 1}`];
 
     if(!gamepadContainer.supported || !gamepadContainer.active || !gamepad || !gamepad.connected) return false;
 
     return KeyToGamepad[key](gamepad);
+  }
+}
+
+export class DelayedInputHandler {
+
+  private game: Phaser.Game;
+
+  public keyEmitter: Subject<{ key: string, player: number }> = new Subject();
+
+  public init(game: Phaser.Game) {
+    if(this.game) throw new Error('Cannot re-init KeyMapHandler');
+    this.game = game;
+
+    this.initKeys();
+  }
+
+  private initKeys() {
+    this.initKeyboard();
+
+    // TODO init gamepad watcher
+  }
+
+  private initKeyboard() {
+
+    // this is for m~e~n~u~s only.
+    // game key handling is shown above
+    const keyMap = this.game.input.keyboard.addKeys(
+      _.omitBy(KeyToPhaserKey, (val, key) => _.includes(['Brake', 'SteerLeft', 'SteerRight'], key))
+    );
+
+    Object.keys(keyMap).forEach(key => {
+      keyMap[key].onDown.add(() => {
+        this.keyEmitter.next({ key, player: 0 });
+      });
+    });
   }
 }

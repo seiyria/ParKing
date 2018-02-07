@@ -1,6 +1,5 @@
 
 import { Menu } from './Menu';
-import { KeyMapHandler } from '../../global/key';
 import { GameState } from '../../global/gamestate';
 import { ConfigManager } from '../../global/config';
 import { Helpers } from '../../global/helpers';
@@ -23,6 +22,28 @@ export class GameModeMenu extends Menu {
 
   constructor() {
     super({ menuVerticalOffset: 300, menuOptionSpacing: 100, menuAlign: 'center' });
+  }
+
+  public init(): void {
+    super.init();
+
+    this.watchForKey('Back', { player: this.menuControlPlayer }, () => {
+      GameState.popState();
+    });
+
+    this.watchForKey('Left', { player: this.menuControlPlayer }, () => {
+      this.selectedMenu--;
+      if(this.selectedMenu < 0) this.selectedMenu = this.options.length - 1;
+      ConfigManager.setGameMenu(this.selectedMenu);
+      this.recalculateVisibleOptions();
+    });
+
+    this.watchForKey('Right', { player: this.menuControlPlayer }, () => {
+      this.selectedMenu++;
+      if(this.selectedMenu >= this.options.length) this.selectedMenu = 0;
+      ConfigManager.setGameMenu(this.selectedMenu);
+      this.recalculateVisibleOptions();
+    });
   }
 
   create() {
@@ -54,8 +75,8 @@ export class GameModeMenu extends Menu {
       }}, i);
     }
 
-    this.recalculateVisibleOptions();
     this.selectedMenu = ConfigManager.gameMenu;
+    this.recalculateVisibleOptions();
 
     const titleOpts = Helpers.defaultTextOptions();
     titleOpts.align = 'center';
@@ -71,27 +92,6 @@ export class GameModeMenu extends Menu {
 
     this.menuDescText.setText(this.menuDescs[this.selectedMenu]);
     this.menuDescText.position.x = this.game.width / 2;
-
-    if(KeyMapHandler.isDown('Left', this.menuControlPlayer)) {
-      this.selectedMenu--;
-      if(this.selectedMenu < 0) this.selectedMenu = this.options.length - 1;
-      ConfigManager.setGameMenu(this.selectedMenu);
-      this.recalculateVisibleOptions();
-      return;
-    }
-
-    if(KeyMapHandler.isDown('Right', this.menuControlPlayer)) {
-      this.selectedMenu++;
-      if(this.selectedMenu >= this.options.length) this.selectedMenu = 0;
-      ConfigManager.setGameMenu(this.selectedMenu);
-      this.recalculateVisibleOptions();
-      return;
-    }
-
-    if(KeyMapHandler.isDown('Back', this.menuControlPlayer)) {
-      GameState.popState();
-      return;
-    }
   }
 
   shutdown() {

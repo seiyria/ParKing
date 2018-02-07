@@ -1,7 +1,9 @@
 
 import * as _ from 'lodash';
 
-import { KeyMapHandler } from '../../global/key';
+import { Observable } from 'rxjs';
+
+import { Key, DelayedInputHandler } from '../../global/key';
 import { Helpers } from '../../global/helpers';
 
 class Option {
@@ -36,6 +38,9 @@ export abstract class Menu extends Phaser.State {
 
   protected menuControlPlayer: number = 0;
 
+  protected keyMapHandler: DelayedInputHandler;
+  protected key$: Observable<{ key: string, player: number }>;
+
   protected get currentOption(): Option {
     return this.currentOptions[this.selectedOption];
   }
@@ -47,6 +52,29 @@ export abstract class Menu extends Phaser.State {
   constructor(opts) {
     super();
     _.extend(this, opts);
+  }
+
+  public init() {
+    this.initKeyHandler();
+
+    this.watchForKey('Down', { player: this.menuControlPlayer }, () => {
+      this.selectedOption++;
+      if(this.selectedOption >= this.currentOptions.length) this.selectedOption = 0;
+      this.recalculateVisibleOptions();
+    });
+
+    this.watchForKey('Up', { player: this.menuControlPlayer }, () => {
+      this.selectedOption--;
+      if(this.selectedOption < 0) this.selectedOption = this.currentOptions.length - 1;
+      this.recalculateVisibleOptions();
+    });
+
+    this.watchForKey('Confirm', { player: this.menuControlPlayer }, () => {
+      const opt = this.currentOption;
+      if(!opt) return;
+
+      opt.callback();
+    });
   }
 
   public create() {
@@ -90,34 +118,15 @@ export abstract class Menu extends Phaser.State {
       const menuPointerAnimation = (this.game.time.now / 25) % 28;
       if(menuPointerAnimation < 14) {
         this.pointer.height = 16 - menuPointerAnimation;
-        this.pointer.y = (opt.textObj.y + menuPointerAnimation / 2) - 3;
+        this.pointer.y = (opt.textObj.y + menuPointerAnimation / 2) + 1;
       } else {
         this.pointer.height = menuPointerAnimation - 12;
-        this.pointer.y = (opt.textObj.y + 14 - (menuPointerAnimation / 2)) - 3;
+        this.pointer.y = (opt.textObj.y + 14 - (menuPointerAnimation / 2)) + 1;
       }
 
       if(opt.update) {
         opt.update();
       }
-
-      if(KeyMapHandler.isDown('Confirm', this.menuControlPlayer) && opt.callback) {
-        opt.callback();
-        return;
-      }
-    }
-
-    if(KeyMapHandler.isDown('Down', this.menuControlPlayer)) {
-      this.selectedOption++;
-      if(this.selectedOption >= this.currentOptions.length) this.selectedOption = 0;
-      this.recalculateVisibleOptions();
-      return;
-    }
-
-    if(KeyMapHandler.isDown('Up', this.menuControlPlayer)) {
-      this.selectedOption--;
-      if(this.selectedOption < 0) this.selectedOption = this.currentOptions.length - 1;
-      this.recalculateVisibleOptions();
-      return;
     }
 
   }
@@ -133,6 +142,21 @@ export abstract class Menu extends Phaser.State {
         opt.textObj.destroy();
       });
     }
+  }
+
+  private initKeyHandler() {
+    this.keyMapHandler = new DelayedInputHandler();
+    this.keyMapHandler.init(this.game);
+  }
+
+  protected watchForKey(watchKey: Key, watch: { player?: number, option?: number, menu?: number }, callback: (args) => void) {
+    this.keyMapHandler.keyEmitter
+      .filter(({ key, player }) => key === watchKey
+                                && (_.isUndefined(watch.player) || watch.player === player)
+                                && (_.isUndefined(watch.option) || watch.option === this.selectedOption)
+                                && (_.isUndefined(watch.menu)   || watch.menu   === this.selectedMenu)
+      )
+      .subscribe(callback);
   }
 
   protected setMenuTextXY(textObj: Phaser.Text, optIndex: number) {
@@ -156,13 +180,17 @@ export abstract class Menu extends Phaser.State {
     }
   }
 
-  protected addOption(text: string, opts: { callback?: Function, update?: Function }, menu: number = 0): Option {
+  protected addOption(text: string, opts: { callback?: Function, update?: Function, keys?: Function }, menu: number = 0): Option {
 
     const newIndex = this.currentOptions.length;
 
     const newOpt = new Option(opts);
     const textObj = this.game.add.text(0, 0, text, Helpers.defaultTextOptions());
     newOpt.textObj = textObj;
+
+    if(opts.keys) {
+      opts.keys(newIndex, menu);
+    }
 
     textObj.inputEnabled = true;
     if(opts.callback) textObj.events.onInputDown.add(opts.callback);

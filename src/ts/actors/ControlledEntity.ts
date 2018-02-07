@@ -1,7 +1,7 @@
 
 
 import { Entity } from './Entity';
-import { KeyMapHandler } from '../global/key';
+import { InstantInputHandler } from '../global/key';
 import { GameState } from '../global/gamestate';
 
 // TODO tire tracks: https://jsfiddle.net/jolmos/yeL4Lbdh/
@@ -31,9 +31,13 @@ export abstract class ControlledEntity extends Entity {
   protected baseThrust: number;
 
   private isHalted: boolean;
+  private inputHandler: InstantInputHandler;
 
   create(opts) {
     super.create(opts);
+
+    this.inputHandler = new InstantInputHandler();
+    this.inputHandler.init(this.game);
 
     opts.wheelPositions = opts.wheelPositions || [
       [-(this.width / 2) - 3, -this.height / 2],
@@ -70,8 +74,8 @@ export abstract class ControlledEntity extends Entity {
   update() {
     if(this.isHalted) return;
 
-    const left = KeyMapHandler.isDown('SteerLeft', this.myPlayer, false);
-    const right = KeyMapHandler.isDown('SteerRight', this.myPlayer, false);
+    const left = this.inputHandler.isDown('SteerLeft', this.myPlayer);
+    const right = this.inputHandler.isDown('SteerRight', this.myPlayer);
 
     let angle = 0;
 
@@ -95,7 +99,7 @@ export abstract class ControlledEntity extends Entity {
 
     this.body.thrust(this.thrust);
 
-    if(KeyMapHandler.isDown('Brake', this.myPlayer, false)) {
+    if(this.inputHandler.isDown('Brake', this.myPlayer)) {
       this.loseThrust(this.manualBrakeForce);
     }
 

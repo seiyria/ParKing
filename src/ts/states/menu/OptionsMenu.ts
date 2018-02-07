@@ -2,7 +2,7 @@
 
 import { Menu } from './Menu';
 import { ConfigManager } from '../../global/config';
-import { KeyMapHandler } from '../../global/key';
+import { DelayedInputHandler } from '../../global/key';
 import { GameState } from '../../global/gamestate';
 
 export class OptionsMenu extends Menu {
@@ -13,22 +13,30 @@ export class OptionsMenu extends Menu {
     super({ menuVerticalOffset: 200, menuOptionSpacing: 50, menuAlign: 'left' });
   }
 
+  public init(): void {
+    super.init();
+
+    this.watchForKey('Back', { player: this.menuControlPlayer }, () => {
+      GameState.popState();
+    });
+  }
+
   public create(): void {
     super.create();
 
-    const volOpt = this.addOption(ConfigManager.masterVolumeDisplay, { update: () => {
+    const volOpt = this.addOption(ConfigManager.masterVolumeDisplay, { keys: (option, menu) => {
 
-      if(KeyMapHandler.isDown('Left', 0)) {
+      this.watchForKey('Left', { player: this.menuControlPlayer, option, menu }, () => {
         const curSet = ConfigManager.options.masterVolume;
         ConfigManager.setMasterVolume(curSet - 0.05);
         volOpt.textObj.text = ConfigManager.masterVolumeDisplay;
-      }
+      });
 
-      if(KeyMapHandler.isDown('Right', 0)) {
+      this.watchForKey('Right', { player: this.menuControlPlayer, option, menu }, () => {
         const curSet = ConfigManager.options.masterVolume;
         ConfigManager.setMasterVolume(curSet + 0.05);
         volOpt.textObj.text = ConfigManager.masterVolumeDisplay;
-      }
+      });
 
     }});
 
@@ -44,21 +52,21 @@ export class OptionsMenu extends Menu {
       volOpt.textObj.text = ConfigManager.masterVolumeDisplay;
     });
 
-    const ssOpt = this.addOption(ConfigManager.screenShakeDisplay, { update: () => {
+    const ssOpt = this.addOption(ConfigManager.screenShakeDisplay, { keys: (option, menu) => {
 
-      if(KeyMapHandler.isDown('Left', 0)) {
+      this.watchForKey('Left', { player: this.menuControlPlayer, option, menu }, () => {
         const curSet = ConfigManager.options.screenShake;
         ConfigManager.setScreenShake(curSet - 0.1);
         ssOpt.textObj.text = ConfigManager.screenShakeDisplay;
         GameState.screenShake(4);
-      }
+      });
 
-      if(KeyMapHandler.isDown('Right', 0)) {
+      this.watchForKey('Right', { player: this.menuControlPlayer, option, menu }, () => {
         const curSet = ConfigManager.options.screenShake;
         ConfigManager.setScreenShake(curSet + 0.1);
         ssOpt.textObj.text = ConfigManager.screenShakeDisplay;
         GameState.screenShake(4);
-      }
+      });
 
     }});
 
@@ -81,14 +89,5 @@ export class OptionsMenu extends Menu {
 
     this.recalculateVisibleOptions();
 
-  }
-
-  public update() {
-    super.update();
-
-    if(KeyMapHandler.isDown('Back', 0)) {
-      GameState.popState();
-      return;
-    }
   }
 }

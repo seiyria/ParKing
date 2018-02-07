@@ -2,7 +2,7 @@
 import * as _ from 'lodash';
 
 import { Menu } from './Menu';
-import { KeyMapHandler } from '../../global/key';
+import { DelayedInputHandler } from '../../global/key';
 import { GameState } from '../../global/gamestate';
 import { VariantManager } from '../../global/variant';
 
@@ -12,6 +12,14 @@ export class VariantsMenu extends Menu {
 
   constructor() {
     super({ menuVerticalOffset: 200, menuOptionSpacing: 50, menuAlign: 'left' });
+  }
+
+  public init(): void {
+    super.init();
+
+    this.watchForKey('Back', { player: this.menuControlPlayer }, () => {
+      GameState.popState();
+    });
   }
 
   public create(): void {
@@ -31,22 +39,25 @@ export class VariantsMenu extends Menu {
     const createOption = (variantKey: string, options: string[]|number[]) => {
 
       const opt = this.addOption(VariantManager.keyDisplay(variantKey), {
-        update: () => {
+        keys: (option, menu) => {
 
-          let resIdx = _.indexOf(options, VariantManager.getKey(variantKey));
-          if(resIdx === -1) resIdx = 0;
+          this.watchForKey('Left', { player: this.menuControlPlayer, option, menu }, () => {
+            let resIdx = _.indexOf(options, VariantManager.getKey(variantKey));
+            if(resIdx === -1) resIdx = 0;
 
-          if(KeyMapHandler.isDown('Left', 0)) {
             const newIdx = resIdx - 1 === -1 ? options.length - 1 : resIdx - 1;
             VariantManager.setKey(variantKey, (<any>options)[newIdx]);
             opt.textObj.text = VariantManager.keyDisplay(variantKey);
-          }
+          });
 
-          if(KeyMapHandler.isDown('Right', 0)) {
+          this.watchForKey('Right', { player: this.menuControlPlayer, option, menu }, () => {
+            let resIdx = _.indexOf(options, VariantManager.getKey(variantKey));
+            if(resIdx === -1) resIdx = 0;
+
             const newIdx = resIdx + 1 === options.length ? 0 : resIdx + 1;
             VariantManager.setKey(variantKey, (<any>options)[newIdx]);
             opt.textObj.text = VariantManager.keyDisplay(variantKey);
-          }
+          });
         }});
 
       opt.textObj.inputEnabled = true;
@@ -82,14 +93,5 @@ export class VariantsMenu extends Menu {
 
     this.recalculateVisibleOptions();
 
-  }
-
-  public update() {
-    super.update();
-
-    if(KeyMapHandler.isDown('Back', this.menuControlPlayer)) {
-      GameState.popState();
-      return;
-    }
   }
 }

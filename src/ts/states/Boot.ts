@@ -2,6 +2,7 @@
 import * as Phaser from 'phaser-ce';
 
 import { ResourceManager } from '../global/resources';
+import { GameState } from '../global/gamestate';
 
 export class Boot extends Phaser.State {
 
@@ -19,6 +20,8 @@ export class Boot extends Phaser.State {
     this.game.scale.pageAlignVertically = true;
 
     this.game.stage.disableVisibilityChange = true;
+
+    GameState.init(this.game);
 
     this.game.state.start('Preloader');
   }

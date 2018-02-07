@@ -6,7 +6,6 @@ import { PausableMenu } from '../menu/PausableMenu';
 import { GameState } from '../../global/gamestate';
 import { ParkingSpace } from '../../actors/ParkingSpace';
 import { ControlledEntity } from '../../actors/ControlledEntity';
-import { KeyMapHandler } from '../../global/key';
 
 const MAP_GIDS = {
   PARKING_SPACE_PLAIN: 17,
@@ -33,33 +32,30 @@ export abstract class GameMode extends PausableMenu {
 
   private lastCarId = 0;
 
+  public init(): void {
+    super.init();
+
+    this.watchForKey('Debug', {}, () => {
+      const isDebug = GameState.toggleDebug();
+      this.isDebug = isDebug;
+      this.groupCars.children.forEach(car => (<ControlledEntity>car).toggleDebug(isDebug));
+    });
+
+    this.watchForKey('Pause', { player: this.menuControlPlayer }, (args) => {
+      if(this.gamePaused) {
+        this.togglePause(this.menuControlPlayer);
+        this.menuControlPlayer = undefined;
+
+      } else {
+        this.togglePause(args.player);
+      }
+    });
+  }
+
   create() {
     GameState.resetGameForInit();
     super.create();
     this.loadMap();
-  }
-
-  update() {
-    super.update();
-
-    if(KeyMapHandler.isDown('Debug')) {
-      const isDebug = GameState.toggleDebug();
-      this.isDebug = isDebug;
-      this.groupCars.children.forEach(car => (<ControlledEntity>car).toggleDebug(isDebug));
-    }
-
-    if(this.gamePaused) {
-      if(KeyMapHandler.isDown('Pause', this.menuControlPlayer)) {
-        this.togglePause(this.menuControlPlayer);
-        this.menuControlPlayer = null;
-      }
-
-    } else {
-      GameState.allPlayers.forEach(i => {
-        if(!KeyMapHandler.isDown('Pause', i)) return;
-        this.togglePause(i);
-      });
-    }
   }
 
   shutdown() {
