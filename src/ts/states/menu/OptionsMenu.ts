@@ -7,7 +7,7 @@ import { GameState } from '../../global/gamestate';
 
 export class OptionsMenu extends Menu {
 
-  protected menuTitle = 'Options';
+  protected menuTitle = ['Options'];
 
   constructor() {
     super({ menuVerticalOffset: 200, menuOptionSpacing: 50, menuAlign: 'left' });
@@ -78,6 +78,8 @@ export class OptionsMenu extends Menu {
     this.addOption('Back', { callback: () => {
       GameState.popState();
     }});
+
+    this.recalculateVisibleOptions();
 
   }
 

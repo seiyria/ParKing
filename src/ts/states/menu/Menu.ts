@@ -17,15 +17,16 @@ class Option {
 
 export abstract class Menu extends Phaser.State {
 
-  protected options: Option[] = [];
+  protected options: Array<Option[]> = [];
   protected visibleOptions: Option[] = [];
   protected selectedOption = 0;
+  protected selectedMenu = 0;
 
   protected menuVerticalOffset = 100;
   protected menuOptionSpacing = 50;
   protected menuAlign: 'left'|'center' = 'left';
 
-  protected menuTitle: string;
+  protected menuTitle: string[];
 
   protected pointer: Phaser.Sprite;
   protected alphaText: Phaser.Text;
@@ -34,6 +35,14 @@ export abstract class Menu extends Phaser.State {
   protected menuItems: Phaser.Group;
 
   protected menuControlPlayer: number = 0;
+
+  protected get currentOption(): Option {
+    return this.currentOptions[this.selectedOption];
+  }
+
+  protected get currentOptions(): Option[] {
+    return this.options[this.selectedMenu] || [];
+  }
 
   constructor(opts) {
     super();
@@ -56,7 +65,7 @@ export abstract class Menu extends Phaser.State {
     const titleOpts = Helpers.defaultTextOptions();
     titleOpts.align = 'center';
     titleOpts.fontSize = 50;
-    this.titleText = this.game.add.text(0, 100, this.menuTitle, titleOpts);
+    this.titleText = this.game.add.text(0, 100, this.menuTitle[0], titleOpts);
     this.titleText.anchor.set(0.5);
 
     this.menuItems = this.game.add.group();
@@ -66,13 +75,14 @@ export abstract class Menu extends Phaser.State {
   }
 
   public update() {
+    this.titleText.setText(this.menuTitle[this.selectedMenu]);
     this.titleText.position.x = this.game.width / 2;
 
     this.visibleOptions.forEach((opt, index) => {
       this.setMenuTextXY(opt.textObj, index);
     });
 
-    const opt = this.getCurrentOption();
+    const opt = this.currentOption;
 
     if(opt) {
       this.pointer.x = opt.textObj.x - 60;
@@ -98,14 +108,14 @@ export abstract class Menu extends Phaser.State {
 
     if(KeyMapHandler.isDown('Down', this.menuControlPlayer)) {
       this.selectedOption++;
-      if(this.selectedOption >= this.options.length) this.selectedOption = 0;
+      if(this.selectedOption >= this.currentOptions.length) this.selectedOption = 0;
       this.recalculateVisibleOptions();
       return;
     }
 
     if(KeyMapHandler.isDown('Up', this.menuControlPlayer)) {
       this.selectedOption--;
-      if(this.selectedOption < 0) this.selectedOption = this.options.length - 1;
+      if(this.selectedOption < 0) this.selectedOption = this.currentOptions.length - 1;
       this.recalculateVisibleOptions();
       return;
     }
@@ -133,9 +143,9 @@ export abstract class Menu extends Phaser.State {
     }
   }
 
-  protected addOption(text: string, opts: { callback?: Function, update?: Function }): Option {
+  protected addOption(text: string, opts: { callback?: Function, update?: Function }, menu: number = 0): Option {
 
-    const newIndex = this.options.length;
+    const newIndex = this.currentOptions.length;
 
     const newOpt = new Option(opts);
     const textObj = this.game.add.text(0, 0, text, Helpers.defaultTextOptions());
@@ -147,9 +157,10 @@ export abstract class Menu extends Phaser.State {
       this.selectedOption = newIndex;
     });
 
-    this.setMenuTextXY(textObj, newIndex);
+    this.options[menu] = this.options[menu] || [];
+    this.options[menu].push(newOpt);
 
-    this.options.push(newOpt);
+    this.setMenuTextXY(textObj, newIndex);
 
     if(newIndex === 0) {
       this.pointer.visible = true;
@@ -157,32 +168,39 @@ export abstract class Menu extends Phaser.State {
       this.pointer.y = textObj.y + 3;
     }
 
-    this.recalculateVisibleOptions();
     this.menuItems.add(textObj);
 
     return newOpt;
   }
 
-  protected getCurrentOption(): Option {
-    return this.options[this.selectedOption];
+  private hideAllOptions() {
+    for(let i = 0; i < this.options.length; i++) {
+      this.options[i].forEach(opt => {
+        opt.textObj.visible = false;
+      });
+    }
   }
 
   protected recalculateVisibleOptions() {
-    const optionHeight = this.options[0].textObj.y;
+
+    this.hideAllOptions();
+
+    const optionHeight = this.currentOptions[0].textObj.y;
     const heightBuffer = this.titleText ? this.titleText.height + this.menuVerticalOffset : 0;
-    const optionsVisible = _.reject(this.options, opt => heightBuffer + (<any>opt.textObj).originalY - optionHeight >= this.game.height);
+    const optionsVisible = _.reject(this.currentOptions, opt => heightBuffer + (<any>opt.textObj).originalY - optionHeight >= this.game.height);
     const numOptsVisible = optionsVisible.length;
-    if(numOptsVisible === this.options.length) {
-      this.visibleOptions = this.options;
+    if(numOptsVisible === this.currentOptions.length) {
+      this.visibleOptions = this.currentOptions;
+      this.visibleOptions.forEach(opt => opt.textObj.visible = true);
       return;
     }
 
     let sliceStart = 0;
     if(this.selectedOption > numOptsVisible / 2) sliceStart = Math.floor(this.selectedOption - numOptsVisible / 2);
 
-    this.options.forEach(opt => opt.textObj.visible = false);
+    this.currentOptions.forEach(opt => opt.textObj.visible = false);
 
-    this.visibleOptions = this.options.slice(sliceStart);
+    this.visibleOptions = this.currentOptions.slice(sliceStart);
     this.visibleOptions.forEach((opt, idx) => {
       this.setMenuTextXY(opt.textObj, idx);
       opt.textObj.visible = true;

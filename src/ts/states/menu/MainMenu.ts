@@ -18,7 +18,7 @@ const possibleTexts = [
 
 export class MainMenu extends Menu {
 
-  protected menuTitle = 'Par King';
+  protected menuTitle = ['Par King'];
   private funText: Phaser.Text;
 
   private baseFunWidth: number;
@@ -42,20 +42,21 @@ export class MainMenu extends Menu {
 
     this.baseFunWidth = this.funText.width / 2;
 
-    this.addOption('Play', {
-      callback: () => {
-        GameState.setPlayer(0, true);
-        GameState.startPlaying();
-      }
-    });
-
-    this.addOption('Variants', { callback: () => {
-      GameState.pushState('VariantsMenu');
+    this.addOption('Play', { callback: () => {
+      GameState.pushState('GameModeMenu');
     }});
 
     this.addOption('Options', { callback: () => {
       GameState.pushState('OptionsMenu');
     }});
+
+    this.addOption('Quit', { callback: () => {
+      if(window.confirm('Are you sure you want to quit? Vroom vroom?')) {
+        window.open(window.location.toString(), '_self').close();
+      }
+    }});
+
+    this.recalculateVisibleOptions();
   }
 
   public update() {

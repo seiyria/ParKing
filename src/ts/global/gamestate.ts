@@ -45,11 +45,6 @@ export class GameState {
     return GameState._state.debug;
   }
 
-  static startPlaying() {
-    GameState.pushState('SingleplayerValet');
-    GameState.setPlaying(true);
-  }
-
   public static setPlaying(playing: boolean) {
     GameState._state.playing = playing;
   }

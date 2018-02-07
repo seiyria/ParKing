@@ -1,6 +1,7 @@
 
 import * as _ from 'lodash';
 import * as Lockr from 'lockr';
+import { Config } from 'codelyzer';
 
 
 const OPTION_PADDING_RIGHT = 15;
@@ -8,6 +9,7 @@ const OPTION_PADDING_RIGHT = 15;
 class UserOptions {
   screenShake = 1;
   masterVolume = 1;
+  gameMenu = 0;
 }
 
 export class ConfigManager {
@@ -42,6 +44,10 @@ export class ConfigManager {
 
   public static get screenShake(): number {
     return Math.round(this._options.screenShake * 100);
+  }
+
+  public static get gameMenu(): number {
+    return this._options.gameMenu;
   }
 
   public static get screenShakeDisplay(): string {
@@ -111,6 +117,10 @@ export class ConfigManager {
 
   public static setScreenWidth(w: number): number {
     return ConfigManager.setOption('screenWidth', w);
+  }
+
+  public static setGameMenu(menu: number): number {
+    return ConfigManager.setOption('gameMenu', menu);
   }
 
 }

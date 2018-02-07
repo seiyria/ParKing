@@ -5,9 +5,9 @@ import * as Phaser from 'phaser-ce';
 import { Menu } from './Menu';
 import { GameState } from '../../global/gamestate';
 
-export class PausableMenu extends Menu {
+export abstract class PausableMenu extends Menu {
 
-  protected menuTitle = 'Paused';
+  protected menuTitle = ['Paused'];
   private transparentSprite: Phaser.Sprite;
   protected gamePaused: boolean;
 
@@ -34,6 +34,7 @@ export class PausableMenu extends Menu {
     }});
 
     this.toggleSpriteVisibility();
+    this.recalculateVisibleOptions();
   }
 
   update() {

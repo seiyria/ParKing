@@ -8,7 +8,7 @@ import { VariantManager } from '../../global/variant';
 
 export class VariantsMenu extends Menu {
 
-  protected menuTitle = 'Variants';
+  protected menuTitle = ['Variants'];
 
   constructor() {
     super({ menuVerticalOffset: 200, menuOptionSpacing: 50, menuAlign: 'left' });
@@ -79,6 +79,8 @@ export class VariantsMenu extends Menu {
     this.addOption('Back', { callback: () => {
       GameState.popState();
     }});
+
+    this.recalculateVisibleOptions();
 
   }
 
