@@ -122,6 +122,19 @@ export abstract class Menu extends Phaser.State {
 
   }
 
+  public shutdown() {
+    this.pointer.destroy();
+    this.alphaText.destroy();
+    this.titleText.destroy();
+    this.menuItems.destroy();
+
+    for(let i = 0; i < this.options.length; i++) {
+      this.options[i].forEach(opt => {
+        opt.textObj.destroy();
+      });
+    }
+  }
+
   protected setMenuTextXY(textObj: Phaser.Text, optIndex: number) {
 
     const originalSet = !textObj.x && !textObj.y;

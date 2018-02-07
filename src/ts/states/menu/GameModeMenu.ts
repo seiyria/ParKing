@@ -89,4 +89,10 @@ export class GameModeMenu extends Menu {
     }
   }
 
+  shutdown() {
+    super.shutdown();
+
+    this.menuDescText.destroy();
+  }
+
 }

@@ -17,7 +17,7 @@ class GameStateProps {
   states: string[] = [];                // states for menus pushing and popping
 
   // these get reset when play is quit
-  players: boolean[] = [];              // player identifiers, maps to control schemes etc
+  players: boolean|number[] = [];       // player identifiers, maps to control schemes etc
   playerCars: ControlledEntity[] = [];  // current player cars
   playerScores: number[] = [];          // current player scores
   cars = [];                            // all cars
@@ -33,6 +33,10 @@ export class GameState {
     return _.clone(GameState._state);
   }
 
+  static get allPlayers(): number[] {
+    return _.filter(GameState._state.players, _.isNumber);
+  }
+
   static init(game: Phaser.Game) {
     if(GameState.game) throw new Error('Cannot re-init GameState');
     GameState.game = game;
@@ -45,7 +49,7 @@ export class GameState {
     return GameState._state.debug;
   }
 
-  public static setPlaying(playing: boolean) {
+  static setPlaying(playing: boolean) {
     GameState._state.playing = playing;
   }
 
@@ -62,7 +66,7 @@ export class GameState {
   }
 
   static setPlayer(idx: number, exists: boolean) {
-    GameState._state.players[idx] = exists;
+    GameState._state.players[idx] = exists ? idx : false;
   }
 
   public static screenShake(frames = 12, strength = 16) {
@@ -84,10 +88,17 @@ export class GameState {
   }
 
   // reset everything
-  private static reset() {
+  public static reset() {
     GameState._state.cars = [];
     GameState._state.debug = false;
     GameState._state.players = [];
+    GameState._state.playerCars = [];
+    GameState._state.playerScores = [];
+  }
+
+  public static resetGameForInit() {
+    GameState._state.cars = [];
+    GameState._state.debug = false;
     GameState._state.playerCars = [];
     GameState._state.playerScores = [];
   }
@@ -96,7 +107,7 @@ export class GameState {
     GameState.setPlaying(false);
 
     for(let i = 0; i < 4; i++) {
-      GameState.setPlayer(i, false);
+      GameState.setPlayer(i, null);
     }
   }
 }

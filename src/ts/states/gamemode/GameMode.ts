@@ -34,7 +34,7 @@ export abstract class GameMode extends PausableMenu {
   private lastCarId = 0;
 
   init() {
-    GameState.resetPlayerScores();
+    GameState.resetGameForInit();
   }
 
   create() {
@@ -58,15 +58,19 @@ export abstract class GameMode extends PausableMenu {
       }
 
     } else {
-      for(let i = 0; i < GameState.state.players.length; i++) {
-        if(!KeyMapHandler.isDown('Pause', i)) continue;
+      GameState.allPlayers.forEach(i => {
+        if(!KeyMapHandler.isDown('Pause', i)) return;
         this.togglePause(i);
-      }
+      });
     }
   }
 
   shutdown() {
     GameState.resetGame();
+
+    this.groupParkingSpaces.destroy();
+    this.groupDecoration.destroy();
+    this.groupCars.destroy();
   }
 
   private loadMap() {
@@ -235,7 +239,7 @@ export abstract class GameMode extends PausableMenu {
 
   protected getSpawnPoint(idx: number) {
     let spawn = null;
-    const numPlayers = GameState.state.players.length;
+    const numPlayers = GameState.allPlayers.length;
     const carSpawns = (<any>this.map.objects).CarSpawns;
 
     // 1 player can spawn anywhere

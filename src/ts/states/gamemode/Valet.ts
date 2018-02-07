@@ -49,13 +49,13 @@ export abstract class Valet extends GameMode {
 
         const newCars: ControlledEntity[] = [];
 
-        for(let i = 0; i < state.players.length; i++) {
+        GameState.allPlayers.forEach(i => {
           const CarProto: any = this.chooseCar(i);
           const spawn = this.getSpawnPoint(i);
 
           const newCar = this.spawnCar(CarProto, spawn, i);
           newCars.push(newCar);
-        }
+        });
 
         GameState.setPlayerCars(newCars);
 
@@ -68,6 +68,12 @@ export abstract class Valet extends GameMode {
 
     }
 
+  }
+
+  shutdown() {
+    super.shutdown();
+
+    this.carsText.destroy();
   }
 
   private haltCurrentCars() {

@@ -70,4 +70,10 @@ export class MainMenu extends Menu {
 
     this.funText.scale.x = this.funText.scale.y = val;
   }
+
+  public shutdown() {
+    super.shutdown();
+
+    this.funText.destroy();
+  }
 }

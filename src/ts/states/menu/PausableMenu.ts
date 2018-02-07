@@ -44,6 +44,12 @@ export abstract class PausableMenu extends Menu {
     this.titleText.setText(`Paused (P${this.menuControlPlayer + 1 || '?'})`);
   }
 
+  shutdown() {
+    super.shutdown();
+
+    this.transparentSprite.destroy();
+  }
+
   protected togglePause(player?: number) {
     this.gamePaused = !this.gamePaused;
     GameState.setPlaying(this.gamePaused);
@@ -62,7 +68,7 @@ export abstract class PausableMenu extends Menu {
   }
 
   private toggleSpriteVisibility() {
-    const allSprites = [..._.map(this.options, 'textObj'), this.pointer, this.alphaText, this.titleText, this.transparentSprite];
+    const allSprites = [..._.map(this.currentOptions, 'textObj'), this.pointer, this.alphaText, this.titleText, this.transparentSprite];
     allSprites.forEach(sprite => {
       sprite.visible = !sprite.visible;
     });
