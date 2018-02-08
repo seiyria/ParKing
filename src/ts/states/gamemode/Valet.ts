@@ -40,44 +40,38 @@ export abstract class Valet extends GameMode {
 
     const state = GameState.state;
 
-    if(!state.playing || this.isDone) {
+    if(!state.playing || this.isDone || this.isFiringNextRound || !this.shouldNextRoundFire()) return;
+
+    if(this.shouldBeDone()) {
+      this.haltCurrentCars();
+      this.done();
       return;
     }
 
-    if(!this.isFiringNextRound && this.shouldNextRoundFire()) {
+    this.isFiringNextRound = true;
 
-      if(this.shouldBeDone()) {
-        this.haltCurrentCars();
-        this.done();
-        return;
-      }
+    // give a little break before the next set of cars
+    setTimeout(() => {
+      this.haltCurrentCars();
 
-      this.isFiringNextRound = true;
+      const newCars: ControlledEntity[] = [];
 
-      // give a little break before the next set of cars
-      setTimeout(() => {
-        this.haltCurrentCars();
+      GameState.allPlayers.forEach(i => {
+        const CarProto: any = this.chooseCar(i);
+        const spawn = this.getSpawnPoint(i);
 
-        const newCars: ControlledEntity[] = [];
+        const newCar = this.spawnCar(CarProto, spawn, i);
+        newCars.push(newCar);
+      });
 
-        GameState.allPlayers.forEach(i => {
-          const CarProto: any = this.chooseCar(i);
-          const spawn = this.getSpawnPoint(i);
+      GameState.setPlayerCars(newCars);
 
-          const newCar = this.spawnCar(CarProto, spawn, i);
-          newCars.push(newCar);
-        });
+      this.carsLeft -= newCars.length;
+      this.updateCarsText();
 
-        GameState.setPlayerCars(newCars);
+      this.isFiringNextRound = false;
 
-        this.carsLeft -= newCars.length;
-        this.updateCarsText();
-
-        this.isFiringNextRound = false;
-
-      }, _.random(500, 1300));
-
-    }
+    }, _.random(500, 1300));
 
   }
 
