@@ -164,9 +164,26 @@ export abstract class GameMode extends PausableMenu {
   }
 
   private fixParkingSpaces() {
-    const twoSpaces = _.sampleSize(this.groupParkingSpaces.children, 2);
-    twoSpaces[0].frame = 1;
-    twoSpaces[1].frame = 2;
+    const numVIP = this.numVIP();
+    const numHandicap = this.numHandicap();
+
+    const changeSpaces = _.sampleSize(this.groupParkingSpaces.children, numVIP + numHandicap);
+
+    let i = 0;
+    for(i; i < numHandicap; i++) {
+      changeSpaces[i].frame = 1;
+    }
+    for(i; i < numVIP + numHandicap; i++) {
+      changeSpaces[i].frame = 2;
+    }
+  }
+
+  protected numVIP(): number {
+    return 1;
+  }
+
+  protected numHandicap(): number {
+    return 1;
   }
 
   private fixRotations(layer: Phaser.Group) {
