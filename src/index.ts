@@ -7,7 +7,7 @@ import './index.css';
 
 import * as WebFont from 'webfontloader';
 
-import { Boot } from './ts/states/boot';
+import { Boot } from './ts/states/Boot';
 import { Preloader } from './ts/states/Preloader';
 
 import * as MenuStates from './ts/states/menu';
