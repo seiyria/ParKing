@@ -12,8 +12,15 @@ const MAP_GIDS = {
   DECOR_ARROW: 21
 };
 
+// TODO scale parking tolerance based on x,y scale (see below for how)
+/*
+possibly, create a root group and set its scale instead of setting the world scale (this will make distance calculations easier, since it only affects display)
+around here: https://phaserjs.slack.com/archives/C09LG5XU6/p1518131895000228
+*/
+
+// ALSO TODO scale down all sprites to 32x32 and below (cut them by 0.5) so they can scale up
 const GOOD_PARKING_ANGLE_DIFF = 20;   // angle +- difference you can have to park in a spot
-const PARKING_TOLERANCE = 40;         // tolerance of your car center from the parking spot center (in px)
+const PARKING_TOLERANCE = 32;         // tolerance of your car center from the parking spot center (in px)
 
 export abstract class GameMode extends PausableMenu {
 
