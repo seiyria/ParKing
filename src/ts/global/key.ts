@@ -53,14 +53,25 @@ const KeyToGamepad = {
   Pause: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_START),
   Debug: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
 
-  Brake: (gamepad: Phaser.Gamepad): boolean => false,
+  Brake: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_X),
   SteerLeft: (gamepad: Phaser.Gamepad): boolean => false,
   SteerRight: (gamepad: Phaser.Gamepad): boolean => false
 };
 
-KeyToGamepad.Brake = KeyToGamepad.Down;
 KeyToGamepad.SteerLeft = KeyToGamepad.Left;
 KeyToGamepad.SteerRight = KeyToGamepad.Right;
+
+const GamepadToKey = {
+  [Phaser.Gamepad.XBOX360_DPAD_UP]: 'Up',
+  [Phaser.Gamepad.XBOX360_DPAD_DOWN]: 'Down',
+  [Phaser.Gamepad.XBOX360_DPAD_LEFT]: 'Left',
+  [Phaser.Gamepad.XBOX360_DPAD_RIGHT]: 'Right',
+  [Phaser.Gamepad.XBOX360_A]: 'Confirm',
+  [Phaser.Gamepad.XBOX360_B]: 'Back',
+  [Phaser.Gamepad.XBOX360_BACK]: 'Back',
+  [Phaser.Gamepad.XBOX360_START]: 'Pause',
+  [Phaser.Gamepad.XBOX360_LEFT_BUMPER]: 'Debug'
+};
 
 export class InstantInputHandler {
 
@@ -109,8 +120,7 @@ export class DelayedInputHandler {
 
   private initKeys() {
     this.initKeyboard();
-
-    // TODO init gamepad watcher
+    this.initGamepad();
   }
 
   private initKeyboard() {
@@ -126,5 +136,52 @@ export class DelayedInputHandler {
         this.keyEmitter.next({ key, player: 0 });
       });
     });
+  }
+
+  private initGamepad() {
+    for(let i = 1; i <= 4; i++) {
+      const gamepad = this.game.input.gamepad[`pad${i}`];
+
+      let lastFired = '';
+
+      gamepad.onAxisCallback = _.throttle((pad, axis, value) => {
+        if(value === 0) lastFired = '';
+
+        // ¯\_(ツ)_/¯
+        if(axis === Phaser.Gamepad.XBOX360_STICK_LEFT_X) {
+          if(value > 0) {
+            if(lastFired !== 'x+') {
+              lastFired = 'x+';
+              this.keyEmitter.next({ key: 'Right', player: i - 1 });
+            }
+          } else if(value < 0) {
+            if(lastFired !== 'x-') {
+              lastFired = 'x-';
+              this.keyEmitter.next({ key: 'Left', player: i - 1 });
+            }
+          }
+
+        } else if(axis === Phaser.Gamepad.XBOX360_STICK_LEFT_Y) {
+          if(value > 0) {
+            if(lastFired !== 'y-') {
+              lastFired = 'y-';
+              this.keyEmitter.next({ key: 'Down', player: i - 1 });
+            }
+          } else if(value < 0) {
+            if(lastFired !== 'y+') {
+              lastFired = 'y+';
+              this.keyEmitter.next({ key: 'Up', player: i - 1 });
+            }
+          }
+
+        }
+      }, 100);
+
+      gamepad.onDownCallback = (sentInputKey) => {
+        this.keyEmitter.next({ key: GamepadToKey[sentInputKey], player: i - 1 });
+      }
+
+
+    }
   }
 }

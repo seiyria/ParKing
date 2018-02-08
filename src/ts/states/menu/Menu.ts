@@ -84,7 +84,7 @@ export abstract class Menu extends Phaser.State {
 
     this.watchForKey('Confirm', { player: this.menuControlPlayer }, () => {
       const opt = this.currentOption;
-      if(!opt) return;
+      if(!opt || !opt.callback) return;
 
       opt.callback();
     });
@@ -183,6 +183,10 @@ export abstract class Menu extends Phaser.State {
     this.keyMapHandler.init(this.game);
   }
 
+  protected runKeyCallback(callback: (args) => void, args: any) {
+    callback(args);
+  }
+
   protected watchForKey(watchKey: Key, watch: { player?: number, option?: number, menu?: number }, callback: (args) => void) {
     this.keyMapHandler.keyEmitter
       .filter(({ key, player }) => key === watchKey
@@ -190,7 +194,7 @@ export abstract class Menu extends Phaser.State {
                                 && (_.isUndefined(watch.option) || watch.option === this.selectedOption)
                                 && (_.isUndefined(watch.menu)   || watch.menu   === this.selectedMenu)
       )
-      .subscribe(callback);
+      .subscribe((args) => this.runKeyCallback(callback, args));
   }
 
   protected setMenuTextXY(textObj: Phaser.Text, optIndex: number) {

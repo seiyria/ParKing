@@ -21,6 +21,7 @@ export class Boot extends Phaser.State {
 
     this.game.stage.disableVisibilityChange = true;
 
+    this.game.input.gamepad.start();
     GameState.init(this.game);
 
     this.game.state.start('Preloader');
