@@ -15,17 +15,19 @@ export abstract class PausableMenu extends Menu {
     super({ menuVerticalOffset: 300, menuOptionSpacing: 100, menuAlign: 'center' });
   }
 
+  init() {
+    super.init();
+
+    this.transparentSprite = this.game.add.sprite(0, 0, 'default');
+    this.transparentSprite.width = this.game.width;
+    this.transparentSprite.height = this.game.height;
+    this.transparentSprite.alpha = 0.5;
+    this.transparentSprite.tint = 0x000000;
+    this.menuItems.addAt(this.transparentSprite, 0);
+  }
+
   create() {
     super.create();
-
-    if(!this.transparentSprite) {
-      this.transparentSprite = this.game.add.sprite(0, 0, 'default');
-      this.transparentSprite.width = this.game.width;
-      this.transparentSprite.height = this.game.height;
-      this.transparentSprite.alpha = 0.5;
-      this.transparentSprite.tint = 0x000000;
-      this.menuItems.addAt(this.transparentSprite, 0);
-    }
 
     this.addOption('Resume', { callback: () => {
       this.togglePause();
@@ -33,7 +35,7 @@ export abstract class PausableMenu extends Menu {
 
     this.addOption('Main Menu', { callback: () => {
       this.gamePaused = false;
-      GameState.setPlaying(false);
+      this.doUnpauseActions();
       GameState.popState();
     }});
 
@@ -55,15 +57,24 @@ export abstract class PausableMenu extends Menu {
     this.transparentSprite.destroy();
   }
 
+  private doPauseActions() {
+    GameState.setPlaying(false);
+    this.game.physics.p2.pause();
+    this.game.world.bringToTop(this.menuItems);
+  }
+
+  private doUnpauseActions() {
+    GameState.setPlaying(true);
+    this.game.physics.p2.resume();
+  }
+
   protected togglePause(player?: number) {
     this.gamePaused = !this.gamePaused;
-    GameState.setPlaying(this.gamePaused);
 
     if(this.gamePaused) {
-      this.game.physics.p2.pause();
-      this.game.world.bringToTop(this.menuItems);
+      this.doPauseActions();
     } else {
-      this.game.physics.p2.resume();
+      this.doUnpauseActions();
     }
 
     this.selectedOption = 0;

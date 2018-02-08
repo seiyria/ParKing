@@ -55,6 +55,8 @@ export abstract class Menu extends Phaser.State {
   }
 
   public init() {
+    this.menuItems = this.game.add.group();
+
     this.initKeyHandler();
 
     this.watchForKey('Down', { player: this.menuControlPlayer }, () => {
@@ -96,7 +98,6 @@ export abstract class Menu extends Phaser.State {
     this.titleText = this.game.add.text(0, 100, this.menuTitle[0], titleOpts);
     this.titleText.anchor.set(0.5);
 
-    this.menuItems = this.game.add.group();
     this.menuItems.add(this.pointer);
     this.menuItems.add(this.alphaText);
     this.menuItems.add(this.titleText);

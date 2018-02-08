@@ -13,14 +13,25 @@ const VELOCITY_STOP_THRESHOLD = 1;
 
 export abstract class Valet extends GameMode {
 
+  private gameUI: Phaser.Group;
   private carsText: Phaser.Text;
   private isDone: boolean;
   private isFiringNextRound: boolean;
 
   protected carsLeft: number;
 
+  init() {
+    super.init();
+
+    this.gameUI = this.game.add.group();
+
+    this.carsText = this.game.add.text(10, 10, 'Cars Left: 24', Helpers.defaultTextOptions());
+    this.gameUI.add(this.carsText);
+  }
+
   create() {
     super.create();
+    this.game.world.bringToTop(this.gameUI);
     this.updateCarsText();
   }
 
@@ -84,10 +95,6 @@ export abstract class Valet extends GameMode {
   }
 
   private updateCarsText() {
-    if(!this.carsText) {
-      this.carsText = this.game.add.text(10, 10, 'Cars Left: 24', Helpers.defaultTextOptions());
-    }
-
     this.carsText.setText(`Cars Left: ${this.carsLeft}`);
   }
 

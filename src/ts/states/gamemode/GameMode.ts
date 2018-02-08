@@ -56,6 +56,8 @@ export abstract class GameMode extends PausableMenu {
     GameState.resetGameForInit();
     super.create();
     this.loadMap();
+
+    this.titleText.scale.set(this.map.widthInPixels / window.innerWidth, this.map.heightInPixels / window.innerHeight);
   }
 
   shutdown() {
