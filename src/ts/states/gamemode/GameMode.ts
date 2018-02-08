@@ -61,8 +61,6 @@ export abstract class GameMode extends PausableMenu {
     GameState.resetGameForInit();
     super.create();
     this.loadMap();
-
-    this.titleText.scale.set(this.map.widthInPixels / window.innerWidth, this.map.heightInPixels / window.innerHeight);
   }
 
   shutdown() {
@@ -85,7 +83,14 @@ export abstract class GameMode extends PausableMenu {
     this.map.addTilesetImage('Tiles', 'parking-map');
     this.map.addTilesetImage('Objects', 'parking-objects');
 
-    this.game.world.scale.set(window.innerWidth / this.map.widthInPixels, window.innerHeight / this.map.heightInPixels);
+    const scaleX = () => window.innerWidth / this.map.widthInPixels;
+    const scaleY = () => window.innerHeight / this.map.heightInPixels;
+
+    this.game.world.scale.set(scaleX(), scaleY());
+
+    this.game.scale.setResizeCallback(() => {
+      this.game.world.scale.set(scaleX(), scaleY());
+    }, null);
 
     const baseLayer = this.map.createLayer('Floor');
     baseLayer.resizeWorld();

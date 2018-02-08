@@ -50,4 +50,6 @@ Promise.all([fontPromise])
       height: window.innerHeight,
       renderer: Phaser.AUTO
     });
+
+    game.stage.disableVisibilityChange = true;
   });

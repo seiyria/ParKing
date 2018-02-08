@@ -16,10 +16,6 @@ export class Boot extends Phaser.State {
 
   public create(): void {
     this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
-    this.game.scale.pageAlignHorizontally = true;
-    this.game.scale.pageAlignVertically = true;
-
-    this.game.stage.disableVisibilityChange = true;
 
     this.game.input.gamepad.start();
     GameState.init(this.game);
