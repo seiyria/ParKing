@@ -47,7 +47,6 @@ export abstract class PausableMenu extends Menu {
     if(!this.gamePaused) return;
 
     super.update();
-    this.titleText.setText(`Paused (P${this.menuControlPlayer + 1 || '?'})`);
   }
 
   shutdown() {
@@ -55,6 +54,11 @@ export abstract class PausableMenu extends Menu {
 
     this.gamePaused = false;
     this.transparentSprite.destroy();
+  }
+
+  protected repositionTitleText() {
+    super.repositionTitleText();
+    this.titleText.setText(`Paused (P${this.menuControlPlayer + 1 || '?'})`);
   }
 
   private doPauseActions() {

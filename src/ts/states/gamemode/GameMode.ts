@@ -42,7 +42,6 @@ export abstract class GameMode extends PausableMenu {
     });
 
     this.watchForKey('Pause', { player: this.menuControlPlayer }, (args) => {
-      this.manuallyRepositionTitleAndPointer();
 
       if(this.gamePaused) {
         this.togglePause(this.menuControlPlayer);
@@ -51,6 +50,8 @@ export abstract class GameMode extends PausableMenu {
       } else {
         this.togglePause(args.player);
       }
+      
+      this.manuallyRepositionTitleAndPointer();
     });
   }
 
