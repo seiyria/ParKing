@@ -114,10 +114,10 @@ export class GameModeMenu extends Menu {
     super.update();
 
     this.menuDescText.setText(this.menuDescs[this.selectedMenu]);
-    this.menuDescText.position.x = this.game.width / 2;
+    this.menuDescText.position.x = this.widthScaler / 2;
 
-    this.menuLeftArrow.position.x = this.game.width * 1 / 8;
-    this.menuRightArrow.position.x = this.game.width * 7 / 8;
+    this.menuLeftArrow.position.x = this.widthScaler * 1 / 8;
+    this.menuRightArrow.position.x = this.widthScaler * 7 / 8;
   }
 
   shutdown() {

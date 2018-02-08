@@ -21,7 +21,7 @@ export abstract class PausableMenu extends Menu {
     this.transparentSprite = this.game.add.sprite(0, 0, 'default');
     this.transparentSprite.width = this.game.width;
     this.transparentSprite.height = this.game.height;
-    this.transparentSprite.alpha = 0.5;
+    this.transparentSprite.alpha = 0.8;
     this.transparentSprite.tint = 0x000000;
     this.menuItems.addAt(this.transparentSprite, 0);
   }

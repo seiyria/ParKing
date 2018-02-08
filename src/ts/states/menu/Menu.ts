@@ -49,6 +49,10 @@ export abstract class Menu extends Phaser.State {
     return this.options[this.selectedMenu] || [];
   }
 
+  protected get widthScaler(): number {
+    return this.game.world.width;
+  }
+
   constructor(opts) {
     super();
     _.extend(this, opts);
@@ -87,6 +91,7 @@ export abstract class Menu extends Phaser.State {
   }
 
   public create() {
+
     this.game.world.scale.set(1, 1);
     this.options = [];
 
@@ -142,12 +147,13 @@ export abstract class Menu extends Phaser.State {
   }
 
   protected manuallyRepositionTitleAndPointer() {
+    this.recalculateVisibleOptions();
     this.repositionTitleText();
     this.repositionPointer(true);
   }
 
   protected repositionTitleText() {
-    this.titleText.position.x = this.game.width / 2;
+    this.titleText.position.x = this.widthScaler / 2;
   }
 
   protected repositionPointer(forceFullSize = false) {
@@ -192,12 +198,12 @@ export abstract class Menu extends Phaser.State {
     const originalSet = !textObj.x && !textObj.y;
 
     if(this.menuAlign === 'left') {
-      textObj.x = this.game.width / 6;
+      textObj.x = this.widthScaler / 6;
 
     } else {
 
       // normally we'd subtract textObj.width / 2, but we want the arrow to be the same position for all of the options
-      textObj.x = (this.game.width / 2) - 50;
+      textObj.x = (this.widthScaler / 2) - 50;
     }
 
     textObj.y = this.menuVerticalOffset + (this.menuOptionSpacing * optIndex);
@@ -262,10 +268,14 @@ export abstract class Menu extends Phaser.State {
     const optionHeight = this.currentOptions[0].textObj.y;
     const heightBuffer = this.titleText ? this.titleText.height + this.menuVerticalOffset : 0;
     const optionsVisible = _.reject(this.currentOptions, opt => heightBuffer + (<any>opt.textObj).originalY - optionHeight >= this.game.height);
+
     const numOptsVisible = optionsVisible.length;
     if(numOptsVisible === this.currentOptions.length) {
       this.visibleOptions = this.currentOptions;
-      if(didHide) this.visibleOptions.forEach(opt => opt.textObj.visible = true);
+      this.visibleOptions.forEach((opt, idx) => {
+        this.setMenuTextXY(opt.textObj, idx);
+        if(didHide) opt.textObj.visible = true;
+      });
       return;
     }
 

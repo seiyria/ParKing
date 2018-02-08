@@ -50,7 +50,7 @@ export abstract class GameMode extends PausableMenu {
       } else {
         this.togglePause(args.player);
       }
-      
+
       this.manuallyRepositionTitleAndPointer();
     });
   }
