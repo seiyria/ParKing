@@ -19,9 +19,25 @@ export class GameModeMenu extends Menu {
   ];
 
   protected menuDescText: Phaser.Text;
+  protected menuLeftArrow: Phaser.Text;
+  protected menuRightArrow: Phaser.Text;
 
   constructor() {
     super({ menuVerticalOffset: 300, menuOptionSpacing: 100, menuAlign: 'center' });
+  }
+
+  private goLeft() {
+    this.selectedMenu--;
+    if(this.selectedMenu < 0) this.selectedMenu = this.options.length - 1;
+    ConfigManager.setGameMenu(this.selectedMenu);
+    this.recalculateVisibleOptions();
+  }
+
+  private goRight() {
+    this.selectedMenu++;
+    if(this.selectedMenu >= this.options.length) this.selectedMenu = 0;
+    ConfigManager.setGameMenu(this.selectedMenu);
+    this.recalculateVisibleOptions();
   }
 
   public init(): void {
@@ -32,17 +48,11 @@ export class GameModeMenu extends Menu {
     });
 
     this.watchForKey('Left', { player: this.menuControlPlayer }, () => {
-      this.selectedMenu--;
-      if(this.selectedMenu < 0) this.selectedMenu = this.options.length - 1;
-      ConfigManager.setGameMenu(this.selectedMenu);
-      this.recalculateVisibleOptions();
+      this.goLeft();
     });
 
     this.watchForKey('Right', { player: this.menuControlPlayer }, () => {
-      this.selectedMenu++;
-      if(this.selectedMenu >= this.options.length) this.selectedMenu = 0;
-      ConfigManager.setGameMenu(this.selectedMenu);
-      this.recalculateVisibleOptions();
+      this.goRight();
     });
   }
 
@@ -83,8 +93,21 @@ export class GameModeMenu extends Menu {
     titleOpts.fontSize = 20;
     titleOpts.wordWrap = true;
     titleOpts.wordWrapWidth = 500;
+
     this.menuDescText = this.game.add.text(0, 200, this.menuDescs[this.selectedMenu], titleOpts);
     this.menuDescText.anchor.set(0.5);
+
+    const arrowOpts = Helpers.defaultTextOptions();
+    arrowOpts.fontSize = 50;
+
+    this.menuLeftArrow = this.game.add.text(0, 150, '◀', arrowOpts);
+    this.menuRightArrow = this.game.add.text(0, 150, '▶', arrowOpts);
+
+    this.menuLeftArrow.inputEnabled = true;
+    this.menuRightArrow.inputEnabled = true;
+
+    this.menuLeftArrow.events.onInputDown.add(() => this.goLeft());
+    this.menuRightArrow.events.onInputDown.add(() => this.goRight());
   }
 
   update() {
@@ -92,6 +115,9 @@ export class GameModeMenu extends Menu {
 
     this.menuDescText.setText(this.menuDescs[this.selectedMenu]);
     this.menuDescText.position.x = this.game.width / 2;
+
+    this.menuLeftArrow.position.x = this.game.width * 1 / 8;
+    this.menuRightArrow.position.x = this.game.width * 7 / 8;
   }
 
   shutdown() {

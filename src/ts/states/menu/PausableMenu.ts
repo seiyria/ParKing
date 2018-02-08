@@ -59,13 +59,13 @@ export abstract class PausableMenu extends Menu {
 
   private doPauseActions() {
     GameState.setPlaying(false);
-    this.game.physics.p2.pause();
+    this.game.paused = true;
     this.game.world.bringToTop(this.menuItems);
   }
 
   private doUnpauseActions() {
     GameState.setPlaying(true);
-    this.game.physics.p2.resume();
+    this.game.paused = false;
   }
 
   protected togglePause(player?: number) {

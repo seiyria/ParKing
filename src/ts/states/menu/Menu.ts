@@ -59,16 +59,23 @@ export abstract class Menu extends Phaser.State {
 
     this.initKeyHandler();
 
+    const manualUpdate = () => {
+      this.repositionTitleText();
+      this.repositionPointer();
+    };
+
     this.watchForKey('Down', { player: this.menuControlPlayer }, () => {
       this.selectedOption++;
       if(this.selectedOption >= this.currentOptions.length) this.selectedOption = 0;
       this.recalculateVisibleOptions();
+      this.manuallyRepositionTitleAndPointer();
     });
 
     this.watchForKey('Up', { player: this.menuControlPlayer }, () => {
       this.selectedOption--;
       if(this.selectedOption < 0) this.selectedOption = this.currentOptions.length - 1;
       this.recalculateVisibleOptions();
+      this.manuallyRepositionTitleAndPointer();
     });
 
     this.watchForKey('Confirm', { player: this.menuControlPlayer }, () => {
@@ -105,29 +112,18 @@ export abstract class Menu extends Phaser.State {
 
   public update() {
     this.titleText.setText(this.menuTitle[this.selectedMenu]);
-    this.titleText.position.x = this.game.width / 2;
+    this.repositionTitleText();
 
     this.visibleOptions.forEach((opt, index) => {
       this.setMenuTextXY(opt.textObj, index);
     });
 
+    this.repositionPointer();
+
     const opt = this.currentOption;
 
-    if(opt) {
-      this.pointer.x = opt.textObj.x - 60;
-
-      const menuPointerAnimation = (this.game.time.now / 25) % 28;
-      if(menuPointerAnimation < 14) {
-        this.pointer.height = 16 - menuPointerAnimation;
-        this.pointer.y = (opt.textObj.y + menuPointerAnimation / 2) + 1;
-      } else {
-        this.pointer.height = menuPointerAnimation - 12;
-        this.pointer.y = (opt.textObj.y + 14 - (menuPointerAnimation / 2)) + 1;
-      }
-
-      if(opt.update) {
-        opt.update();
-      }
+    if(opt && opt.update) {
+      opt.update();
     }
 
   }
@@ -142,6 +138,37 @@ export abstract class Menu extends Phaser.State {
       this.options[i].forEach(opt => {
         opt.textObj.destroy();
       });
+    }
+  }
+
+  protected manuallyRepositionTitleAndPointer() {
+    this.repositionTitleText();
+    this.repositionPointer(true);
+  }
+
+  protected repositionTitleText() {
+    this.titleText.position.x = this.game.width / 2;
+  }
+
+  protected repositionPointer(forceFullSize = false) {
+
+    const opt = this.currentOption;
+
+    this.pointer.x = opt.textObj.x - 60;
+
+    if(forceFullSize) {
+      this.pointer.height = 16;
+      this.pointer.y = opt.textObj.y + 1;
+      return;
+    }
+
+    const menuPointerAnimation = (this.game.time.now / 25) % 28;
+    if(menuPointerAnimation < 14) {
+      this.pointer.height = 16 - menuPointerAnimation;
+      this.pointer.y = (opt.textObj.y + menuPointerAnimation / 2) + 1;
+    } else {
+      this.pointer.height = menuPointerAnimation - 12;
+      this.pointer.y = (opt.textObj.y + 14 - (menuPointerAnimation / 2)) + 1;
     }
   }
 
