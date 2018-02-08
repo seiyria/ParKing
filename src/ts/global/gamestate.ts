@@ -61,8 +61,12 @@ export class GameState {
     GameState._state.cars.push(car);
   }
 
-  static resetPlayerScores() {
-    GameState._state.playerScores = [0, 0, 0, 0];
+  static getPlayerScore(playerId: number) {
+    return GameState._state.playerScores[playerId] || 0;
+  }
+
+  static setPlayerScore(playerId: number, score: number) {
+    GameState._state.playerScores[playerId] = score;
   }
 
   static setPlayer(idx: number, exists: boolean) {

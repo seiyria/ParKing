@@ -72,10 +72,12 @@ export abstract class PausableMenu extends Menu {
     this.game.paused = false;
   }
 
-  protected runKeyCallback(callback: (args) => void, args: any) {
-    // confirm would run the first button, which is "resume" which runs togglePause
-    if(!this.gamePaused && args.key === 'Confirm') return;
-    callback(args);
+  protected get currentOption() {
+    return this.gamePaused ? this.currentOptions[this.selectedOption] : null;
+  }
+
+  protected canConfirm(): boolean {
+    return this.gamePaused;
   }
 
   protected togglePause(player?: number) {

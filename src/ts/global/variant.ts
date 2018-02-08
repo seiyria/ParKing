@@ -9,7 +9,7 @@ class Variants {
   Snow: YesNoRandom = 'Random';                 // snow on the ground
   RandomParking: YesNoRandom = 'Random';        // randomly placed parking spots
   RoadCones: YesNoRandom = 'Random';            // road cone obstacles
-  NoBrakes: YesNoRandom = 'Random';             // no brakes allowed
+  NoBrakes: YesNoRandom = 'Random';             // no brakes allowed [rounds will happen where you can't use brakes]
   CarWash: YesNoRandom = 'Random';              // car wash map
   Lakeside: YesNoRandom = 'Random';             // lakeside map
   Bombs: YesNoRandom = 'Random';                // explosions in map

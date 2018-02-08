@@ -12,7 +12,8 @@ const MAP_GIDS = {
   DECOR_ARROW: 21
 };
 
-const GOOD_PARKING_ANGLE_DIFF = 10;
+const GOOD_PARKING_ANGLE_DIFF = 20;   // angle +- difference you can have to park in a spot
+const PARKING_TOLERANCE = 40;         // tolerance of your car center from the parking spot center (in px)
 
 export abstract class GameMode extends PausableMenu {
 
@@ -23,6 +24,7 @@ export abstract class GameMode extends PausableMenu {
   protected groupParkingSpaces: Phaser.Group;
   protected groupDecoration: Phaser.Group;
   protected groupCars: Phaser.Group;
+  protected groupCoins: Phaser.Group;
 
   private physicsCars: Phaser.Physics.P2.CollisionGroup;
   private physicsWalls: Phaser.Physics.P2.CollisionGroup;
@@ -69,6 +71,7 @@ export abstract class GameMode extends PausableMenu {
     this.groupParkingSpaces.destroy();
     this.groupDecoration.destroy();
     this.groupCars.destroy();
+    this.groupCoins.destroy();
   }
 
   private loadMap() {
@@ -142,12 +145,15 @@ export abstract class GameMode extends PausableMenu {
     this.groupCars = this.game.add.group();
     this.groupCars.enableBody = true;
     this.groupCars.physicsBodyType = Phaser.Physics.P2JS;
+
+    this.groupCoins = this.game.add.group();
   }
 
   private moveGroups() {
     this.game.world.bringToTop(this.groupParkingSpaces);
     this.game.world.bringToTop(this.groupDecoration);
     this.game.world.bringToTop(this.groupCars);
+    this.game.world.bringToTop(this.groupCoins);
   }
 
   private startPhysics() {
@@ -279,7 +285,7 @@ export abstract class GameMode extends PausableMenu {
     };
   }
 
-  protected checkParkingOverlaps() {
+  protected checkParkingOverlapsAndAssignScores() {
 
     this.groupParkingSpaces.children.forEach((space: ParkingSpace) => {
 
@@ -292,7 +298,12 @@ export abstract class GameMode extends PausableMenu {
         const dist = Phaser.Math.distance(spaceCenter[0], spaceCenter[1], carCenter[0], carCenter[1]);
 
         // too far away to park well
-        if(dist > 32) return;
+        if(dist > PARKING_TOLERANCE) return;
+
+        if(space.isHandicap) {
+          space.scoreData = { player: car.player, score: -20 };
+          return;
+        }
 
         // normalize the angles to be either 90 or 0
         let spaceAngle = Math.abs(space.angle) % 180;
@@ -309,8 +320,7 @@ export abstract class GameMode extends PausableMenu {
         else if(dist > 20)  score = 2;
         else if(dist > 25)  score = 1;
 
-        console.log(score, car.player);
-
+        space.scoreData = { player: car.player, score };
       });
     });
 

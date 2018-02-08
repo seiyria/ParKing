@@ -159,6 +159,7 @@ export abstract class Menu extends Phaser.State {
   protected repositionPointer(forceFullSize = false) {
 
     const opt = this.currentOption;
+    if(!opt) return;
 
     this.pointer.x = opt.textObj.x - 60;
 

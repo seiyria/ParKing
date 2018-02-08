@@ -13,12 +13,15 @@ const VELOCITY_STOP_THRESHOLD = 1;
 
 export abstract class Valet extends GameMode {
 
-  private gameUI: Phaser.Group;
-  private carsText: Phaser.Text;
   private isDone: boolean;
+  private hasShownAllScores: boolean;
   private isFiringNextRound: boolean;
 
+  protected gameUI: Phaser.Group;
+  private finalText: Phaser.Text;
+  private carsText: Phaser.Text;
   protected carsLeft: number;
+  protected scoreTexts: Phaser.Text[] = [];
 
   init() {
     super.init();
@@ -27,11 +30,22 @@ export abstract class Valet extends GameMode {
 
     this.carsText = this.game.add.text(10, 10, 'Cars Left: 24', Helpers.defaultTextOptions());
     this.gameUI.add(this.carsText);
+
+    GameState.allPlayers.forEach(playerId => {
+      this.scoreTexts[playerId] = this.game.add.text(10, 50 * (playerId + 1), 'Score: $0', Helpers.defaultTextOptions());
+      this.gameUI.add(this.scoreTexts[playerId]);
+    });
+
+    this.watchForKey('Confirm', {}, () => {
+      if(!this.hasShownAllScores) return;
+      GameState.popState();
+    });
   }
 
   create() {
     super.create();
     this.game.world.bringToTop(this.gameUI);
+    this.isDone = false;
     this.updateCarsText();
   }
 
@@ -39,6 +53,8 @@ export abstract class Valet extends GameMode {
     super.update();
 
     const state = GameState.state;
+
+    this.bobCoinsUpAndDown();
 
     if(!state.playing || this.isDone || this.isFiringNextRound || !this.shouldNextRoundFire()) return;
 
@@ -79,6 +95,22 @@ export abstract class Valet extends GameMode {
     super.shutdown();
 
     this.carsText.destroy();
+    this.finalText.destroy();
+
+    this.scoreTexts.forEach(text => text.destroy());
+  }
+
+  private bobCoinsUpAndDown() {
+
+    const coinBob = (this.game.time.now / 25) % 28;
+
+    this.groupCoins.children.forEach((coin: Phaser.Sprite) => {
+      if(coinBob < 14) {
+        coin.y = ((<any>coin).baseY + coinBob / 2) + 1;
+      } else {
+        coin.y = ((<any>coin).baseY + 14 - (coinBob / 2)) + 1;
+      }
+    });
   }
 
   private haltCurrentCars() {
@@ -125,12 +157,42 @@ export abstract class Valet extends GameMode {
     return this.carsLeft <= 0;
   }
 
-  private done() {
+  protected done() {
     this.isDone = true;
+  }
 
-    setTimeout(() => {
-      this.checkParkingOverlaps();
-    }, 2000);
+  protected canConfirm(): boolean {
+    return super.canConfirm() || this.hasShownAllScores;
+  }
+
+  protected showFinishMessage(message: string) {
+    this.hasShownAllScores = true;
+
+    const opts = Helpers.defaultTextOptions();
+    opts.fontSize = 40;
+
+    this.finalText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 50, message, opts);
+    this.finalText.anchor.set(0.5);
+    this.gameUI.add(this.finalText);
+  }
+
+  protected updateScore(player: number, scoreMod: number) {
+    let score = GameState.getPlayerScore(player);
+    score += scoreMod;
+    GameState.setPlayerScore(player, score);
+
+    this.scoreTexts[player].setText(`Score: $${score}`);
+  };
+
+  protected determineKeyFrameForScoreValue(value: number) {
+    switch(value) {
+      case 1:     return 5;
+      case 2:     return 6;
+      case 5:     return 7;
+      case 10:    return 8;
+      case -20:   return 9;
+      case 50:    return 10;
+    }
   }
 
 }
