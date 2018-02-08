@@ -1,5 +1,6 @@
 
 const path = require('path');
+const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HTMLWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
@@ -50,14 +51,17 @@ module.exports = {
       }
     ]
   },
-  plugins:[
+  plugins: [
     new HTMLWebpackPlugin({
       title: 'Par King'
     }),
     new CopyWebpackPlugin([
       { context: 'src', from: 'assets/**/*' }
     ]),
-    new ExtractTextPlugin('index.css')
+    new ExtractTextPlugin('index.css'),
+    new webpack.DefinePlugin({
+      ROOT_ASSET_PATH: JSON.stringify(process.env.NODE_ENV === 'production' ? './' : '../../')
+    })
   ],
   resolve: {
     extensions: ['.ts', '.js'],

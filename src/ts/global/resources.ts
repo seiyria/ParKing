@@ -1,6 +1,8 @@
 
+declare const ROOT_ASSET_PATH: string;
+
 export class ResourceManager {
-  private static rootPath = '../../assets';
+  private static rootPath = `${ROOT_ASSET_PATH || '../../'}assets`;
 
   private static carSprites = [
     'blue',
