@@ -95,7 +95,7 @@ export abstract class Valet extends GameMode {
     super.shutdown();
 
     this.carsText.destroy();
-    this.finalText.destroy();
+    if(this.finalText) this.finalText.destroy();
 
     this.scoreTexts.forEach(text => text.destroy());
   }
