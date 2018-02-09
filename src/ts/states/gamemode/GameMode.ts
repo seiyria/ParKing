@@ -254,7 +254,7 @@ export abstract class GameMode extends PausableMenu {
     const xMod = (TILE_WIDTH / 2) * (rotate < 0 ? -1 : 1);
     const car: ControlledEntity = new CarProto(this.game, x - xMod, y - TILE_WIDTH / 2);
 
-    const decidedVelX = _.random(minVelX, maxVelX) * _.sample([80, 70, 60]);
+    const decidedVelX = _.random(minVelX, maxVelX) * _.sample([50, 40, 30]);
 
     this.game.add.existing(car);
     this.groupCars.add(car);
@@ -333,9 +333,9 @@ export abstract class GameMode extends PausableMenu {
         if(carAngle - GOOD_PARKING_ANGLE_DIFF > spaceAngle || carAngle + GOOD_PARKING_ANGLE_DIFF < spaceAngle) return;
 
         let score = 10;
-        if(dist > 10)       score = 5;
-        else if(dist > 20)  score = 2;
-        else if(dist > 25)  score = 1;
+        if(dist > PARKING_TOLERANCE * (1 / 4))  score = 5;
+        if(dist > PARKING_TOLERANCE * (2 / 4))  score = 2;
+        if(dist > PARKING_TOLERANCE * (3 / 4))  score = 1;
 
         space.scoreData = { player: car.player, score };
       });

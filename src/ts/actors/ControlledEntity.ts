@@ -40,8 +40,8 @@ export abstract class ControlledEntity extends Entity {
     this.inputHandler.init(this.game);
 
     opts.wheelPositions = opts.wheelPositions || [
-      [-(this.width / 2) - 1, -this.height / 2 + 2],
-      [(this.width / 2)     , -this.height / 2 + 2],
+      [-(this.width / 2) - 1, -this.height / 2  + 2],
+      [(this.width / 2)     , -this.height / 2  + 2],
       [-(this.width / 2) - 1, (this.height / 2) - 7],
       [(this.width / 2)     , (this.height / 2) - 7]
     ];
@@ -50,7 +50,7 @@ export abstract class ControlledEntity extends Entity {
     if(!this.brakeForce)          this.brakeForce = 2;
     if(!this.manualBrakeForce)    this.manualBrakeForce = 30;
     if(!this.brakeHold)           this.brakeHold = 10;
-    if(!this.turnAngle)           this.turnAngle = 45;
+    if(!this.turnAngle)           this.turnAngle = 60;
     if(!this.reverseThrustMod)    this.reverseThrustMod = 4;
     if(!this.thrustLossMult)      this.thrustLossMult = 0.3;
 
@@ -115,7 +115,9 @@ export abstract class ControlledEntity extends Entity {
 
   private dampenAngleBasedOnThrust(angle: number): number {
     if(this.isHalted) return 0;
-    return angle * Math.max(0.15, (Math.abs(this.thrust) / this.baseThrust));
+    let calcAngle = angle * Math.max(0.15, (Math.abs(this.thrust) / this.baseThrust));
+    if(this.thrust < 0) calcAngle *= -1;
+    return calcAngle;
   }
 
   private updateWheelAngles(angle: number) {
