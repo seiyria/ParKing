@@ -335,7 +335,7 @@ export abstract class GameMode extends PausableMenu {
         let score = 10;
         if(dist > PARKING_TOLERANCE * (1 / 4))  score = 5;
         if(dist > PARKING_TOLERANCE * (2 / 4))  score = 2;
-        if(dist > PARKING_TOLERANCE * (3 / 4))  score = 1;
+        if(dist > PARKING_TOLERANCE * (1 / 4))  score = 1;
 
         space.scoreData = { player: car.player, score };
       });

@@ -2,6 +2,7 @@
 import { Valet } from './Valet';
 import { ParkingSpace } from '../../actors/ParkingSpace';
 import { GameState } from '../../global/gamestate';
+import { Coin } from '../../actors/Coin';
 
 export class SingleplayerValet extends Valet {
   protected possibleMaps = ['BasicSingleplayer'];
@@ -11,7 +12,7 @@ export class SingleplayerValet extends Valet {
   }
 
   create() {
-    this.carsLeft = 24;
+    this.carsLeft = 2;
     super.create();
   }
 
@@ -27,19 +28,14 @@ export class SingleplayerValet extends Valet {
 
       scoredSpaces.forEach((space: ParkingSpace, idx) => {
 
+        // TODO get these ids and cancel them on state shutdown
         setTimeout(() => {
 
-          // TODO abstract determine frame + anchor + baseY + their own update function for bobbing to a Coin actor
           const score = space.scoreData.score;
 
-          const moneySprite = this.game.add.sprite(
-            space.centerX, space.centerY, 'parking-objects',
-            this.determineKeyFrameForScoreValue(score)
-          );
+          const moneySprite = new Coin(this.game, space.centerX, space.centerY, score);
 
-          (<any>moneySprite).baseY = moneySprite.y;
-          moneySprite.anchor.set(0.5);
-
+          this.game.add.existing(moneySprite);
           this.groupCoins.add(moneySprite);
 
           this.updateScore(0, score);
@@ -50,7 +46,7 @@ export class SingleplayerValet extends Valet {
 
       });
 
-      if(scoredSpaces.length === 0) this.showFinishMessage('No points! Try again!')
+      if(scoredSpaces.length === 0) this.showFinishMessage('No points! Try again!');
 
     }, 2000);
   }

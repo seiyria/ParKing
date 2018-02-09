@@ -54,8 +54,6 @@ export abstract class Valet extends GameMode {
 
     const state = GameState.state;
 
-    this.bobCoinsUpAndDown();
-
     if(!state.playing || this.isDone || this.isFiringNextRound || !this.shouldNextRoundFire()) return;
 
     if(this.shouldBeDone()) {
@@ -98,19 +96,6 @@ export abstract class Valet extends GameMode {
     if(this.finalText) this.finalText.destroy();
 
     this.scoreTexts.forEach(text => text.destroy());
-  }
-
-  private bobCoinsUpAndDown() {
-
-    const coinBob = (this.game.time.now / 25) % 28;
-
-    this.groupCoins.children.forEach((coin: Phaser.Sprite) => {
-      if(coinBob < 14) {
-        coin.y = ((<any>coin).baseY + coinBob / 2) + 1;
-      } else {
-        coin.y = ((<any>coin).baseY + 14 - (coinBob / 2)) + 1;
-      }
-    });
   }
 
   private haltCurrentCars() {
@@ -183,16 +168,5 @@ export abstract class Valet extends GameMode {
 
     this.scoreTexts[player].setText(`Score: $${score}`);
   };
-
-  protected determineKeyFrameForScoreValue(value: number) {
-    switch(value) {
-      case 1:     return 5;
-      case 2:     return 6;
-      case 5:     return 7;
-      case 10:    return 8;
-      case -20:   return 9;
-      case 50:    return 10;
-    }
-  }
 
 }

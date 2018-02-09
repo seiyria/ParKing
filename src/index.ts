@@ -3,6 +3,8 @@ import 'p2';
 import 'pixi';
 import 'phaser';
 
+import * as Phaser from 'phaser-ce';
+
 import './index.css';
 
 import * as WebFont from 'webfontloader';
@@ -13,7 +15,7 @@ import { Preloader } from './ts/states/Preloader';
 import * as MenuStates from './ts/states/menu';
 import * as GameModes from './ts/states/gamemode';
 
-class Game extends Phaser.Game {
+class ParkingGame extends Phaser.Game {
   constructor(config) {
     super(config);
 
@@ -41,11 +43,11 @@ const fontPromise = new Promise(resolve => {
   });
 });
 
-export let game: Game;
+export let game: ParkingGame;
 
 Promise.all([fontPromise])
   .then(() => {
-    game = new Game({
+    game = new ParkingGame({
       width: window.innerWidth,
       height: window.innerHeight,
       renderer: Phaser.AUTO

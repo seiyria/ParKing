@@ -1,5 +1,6 @@
 
 import * as _ from 'lodash';
+import * as Phaser from 'phaser-ce';
 
 export abstract class Entity extends Phaser.Sprite {
 
