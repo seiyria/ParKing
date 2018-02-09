@@ -11,7 +11,7 @@ export class SingleplayerValet extends Valet {
   }
 
   create() {
-    this.carsLeft = 24;
+    this.carsLeft = 2;
     super.create();
   }
 

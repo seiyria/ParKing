@@ -28,6 +28,7 @@ export abstract class GameMode extends PausableMenu {
   protected chosenMapName: string;
   protected map: Phaser.Tilemap;
 
+  protected groupContainer: Phaser.Group;
   protected groupParkingSpaces: Phaser.Group;
   protected groupDecoration: Phaser.Group;
   protected groupCars: Phaser.Group;
@@ -40,6 +41,16 @@ export abstract class GameMode extends PausableMenu {
   private isDebug: boolean;
 
   private lastCarId = 0;
+
+  public get scaleX(): number {
+    if(!this.map) return 1;
+    return window.innerWidth / this.map.widthInPixels;
+  }
+
+  public get scaleY(): number {
+    if(!this.map) return 1;
+    return window.innerHeight / this.map.heightInPixels;
+  }
 
   public init(): void {
     super.init();
@@ -72,37 +83,28 @@ export abstract class GameMode extends PausableMenu {
 
   shutdown() {
     GameState.resetGame();
-
-    this.groupParkingSpaces.destroy();
-    this.groupDecoration.destroy();
-    this.groupCars.destroy();
-    this.groupCoins.destroy();
+    
+    this.groupContainer.destroy();
   }
 
   private loadMap() {
     this.chosenMapName = _.sample(this.possibleMaps);
     if(!this.chosenMapName) throw new Error('No map was selected for this game mode');
 
-    this.addGroups();
     this.startPhysics();
 
     this.map = this.game.add.tilemap(this.chosenMapName, 64, 64);
     this.map.addTilesetImage('Tiles', 'parking-map');
     this.map.addTilesetImage('Objects', 'parking-objects');
 
-    const scaleX = () => window.innerWidth / this.map.widthInPixels;
-    const scaleY = () => window.innerHeight / this.map.heightInPixels;
-
-    this.game.world.scale.set(scaleX(), scaleY());
-
-    this.game.scale.setResizeCallback(() => {
-      this.game.world.scale.set(scaleX(), scaleY());
-    }, null);
+    this.addGroups();
 
     const baseLayer = this.map.createLayer('Floor');
+    baseLayer.scale.set(this.scaleX, this.scaleY);
     baseLayer.resizeWorld();
 
     const wallLayer = this.map.createLayer('Walls');
+    wallLayer.scale.set(this.scaleX, this.scaleY);
 
     this.map.setCollision([3], true, wallLayer);
     const allTiles = this.game.physics.p2.convertTilemap(this.map, wallLayer);
@@ -150,6 +152,9 @@ export abstract class GameMode extends PausableMenu {
 
   private addGroups() {
 
+    this.groupContainer = this.game.add.group();
+    this.groupContainer.scale.set(this.scaleX, this.scaleY);
+
     this.groupParkingSpaces = this.game.add.group();
 
     this.groupDecoration = this.game.add.group();
@@ -159,13 +164,15 @@ export abstract class GameMode extends PausableMenu {
     this.groupCars.physicsBodyType = Phaser.Physics.P2JS;
 
     this.groupCoins = this.game.add.group();
+
+    this.groupContainer.add(this.groupParkingSpaces);
+    this.groupContainer.add(this.groupDecoration);
+    this.groupContainer.add(this.groupCars);
+    this.groupContainer.add(this.groupCoins);
   }
 
   private moveGroups() {
-    this.game.world.bringToTop(this.groupParkingSpaces);
-    this.game.world.bringToTop(this.groupDecoration);
-    this.game.world.bringToTop(this.groupCars);
-    this.game.world.bringToTop(this.groupCoins);
+    this.game.world.bringToTop(this.groupContainer);
   }
 
   private startPhysics() {

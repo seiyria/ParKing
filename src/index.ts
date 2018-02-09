@@ -51,5 +51,7 @@ Promise.all([fontPromise])
       renderer: Phaser.AUTO
     });
 
-    game.stage.disableVisibilityChange = true;
+    setTimeout(() => {
+      game.stage.disableVisibilityChange = true;
+    });
   });
