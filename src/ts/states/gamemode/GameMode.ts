@@ -12,15 +12,10 @@ const MAP_GIDS = {
   DECOR_ARROW: 21
 };
 
-// TODO scale parking tolerance based on x,y scale (see below for how)
-/*
-possibly, create a root group and set its scale instead of setting the world scale (this will make distance calculations easier, since it only affects display)
-around here: https://phaserjs.slack.com/archives/C09LG5XU6/p1518131895000228
-*/
+const TILE_WIDTH = 32;
 
-// ALSO TODO scale down all sprites to 32x32 and below (cut them by 0.5) so they can scale up
 const GOOD_PARKING_ANGLE_DIFF = 20;   // angle +- difference you can have to park in a spot
-const PARKING_TOLERANCE = 32;         // tolerance of your car center from the parking spot center (in px)
+const PARKING_TOLERANCE = 16;         // tolerance of your car center from the parking spot center (in px)
 
 export abstract class GameMode extends PausableMenu {
 
@@ -83,7 +78,7 @@ export abstract class GameMode extends PausableMenu {
 
   shutdown() {
     GameState.resetGame();
-    
+
     this.groupContainer.destroy();
   }
 
@@ -93,7 +88,7 @@ export abstract class GameMode extends PausableMenu {
 
     this.startPhysics();
 
-    this.map = this.game.add.tilemap(this.chosenMapName, 64, 64);
+    this.map = this.game.add.tilemap(this.chosenMapName, TILE_WIDTH, TILE_WIDTH);
     this.map.addTilesetImage('Tiles', 'parking-map');
     this.map.addTilesetImage('Objects', 'parking-objects');
 
@@ -221,26 +216,26 @@ export abstract class GameMode extends PausableMenu {
       switch(Phaser.Math.radToDeg(space.rotation)) {
 
         case 0: {
-          space.position.y += 32;
-          space.position.x += 32;
+          space.position.y += TILE_WIDTH / 2;
+          space.position.x += TILE_WIDTH / 2;
           break;
         }
 
         case -180: {
-          space.position.y += 96;
-          space.position.x -= 32;
+          space.position.y += TILE_WIDTH * 1.5;
+          space.position.x -= TILE_WIDTH / 2;
           break;
         }
 
         case 90: {
-          space.position.x += 32;
-          space.position.y += 96;
+          space.position.x += TILE_WIDTH / 2;
+          space.position.y += TILE_WIDTH * 1.5;
           break;
         }
 
         case -90: {
-          space.position.x -= 32;
-          space.position.y += 32;
+          space.position.x -= TILE_WIDTH / 2;
+          space.position.y += TILE_WIDTH / 2;
           break;
         }
 
@@ -250,15 +245,13 @@ export abstract class GameMode extends PausableMenu {
 
   protected spawnCar(CarProto, { x, y, minVelX, maxVelX, rotate }, playerIdx: number) {
 
-    const xMod = rotate < 0 ? -32 : 32;
-    const car: ControlledEntity = new CarProto(this.game, x - xMod, y - 32);
+    const xMod = (TILE_WIDTH / 2) * (rotate < 0 ? -1 : 1);
+    const car: ControlledEntity = new CarProto(this.game, x - xMod, y - TILE_WIDTH / 2);
 
     const decidedVelX = _.random(minVelX, maxVelX) * _.sample([80, 70, 60]);
 
     this.game.add.existing(car);
     this.groupCars.add(car);
-
-    car.scale.set(1, 0.8);
 
     this.game.physics.p2.enable(car);
     car.body.setRectangle(car.width, car.height);

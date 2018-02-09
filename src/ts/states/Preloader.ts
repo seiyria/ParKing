@@ -29,7 +29,7 @@ export class Preloader extends Phaser.State {
     });
 
     ResourceManager.InGameSpriteSheets.forEach(({ name, path }) => {
-      this.game.load.spritesheet(name, path, 64, 64);
+      this.game.load.spritesheet(name, path, 32, 32);
     });
 
     Object.keys(AllMaps).forEach(mapName => {

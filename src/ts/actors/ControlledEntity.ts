@@ -40,13 +40,13 @@ export abstract class ControlledEntity extends Entity {
     this.inputHandler.init(this.game);
 
     opts.wheelPositions = opts.wheelPositions || [
-      [-(this.width / 2) - 3, -this.height / 2],
-      [(this.width / 2)  - 1, -this.height / 2],
-      [-(this.width / 2) - 3, (this.height / 2) - 10],
-      [(this.width / 2)  - 1, (this.height / 2) - 10]
+      [-(this.width / 2) - 1, -this.height / 2 + 2],
+      [(this.width / 2)     , -this.height / 2 + 2],
+      [-(this.width / 2) - 1, (this.height / 2) - 7],
+      [(this.width / 2)     , (this.height / 2) - 7]
     ];
 
-    if(!this.thrust)              this.thrust = 600;
+    if(!this.thrust)              this.thrust = 300;
     if(!this.brakeForce)          this.brakeForce = 2;
     if(!this.manualBrakeForce)    this.manualBrakeForce = 30;
     if(!this.brakeHold)           this.brakeHold = 10;
@@ -67,6 +67,7 @@ export abstract class ControlledEntity extends Entity {
     for(let i = 0; i < opts.wheelPositions.length; i++) {
       const [x, y] = opts.wheelPositions[i];
       const wheelSprite = this.game.add.sprite(x, y, 'car-wheel');
+      wheelSprite.scale.set(2, 2);
       this.wheelSprites.addChild(wheelSprite);
     }
   }
