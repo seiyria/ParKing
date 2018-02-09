@@ -26,10 +26,8 @@ export class SingleplayerValet extends Valet {
       const scoredSpaces = this.groupParkingSpaces.children
         .filter((space: ParkingSpace) => space.scoreData.score !== 0);
 
-      scoredSpaces.forEach((space: ParkingSpace, idx) => {
-
-        // TODO get these ids and cancel them on state shutdown
-        setTimeout(() => {
+      this.clearIntervalsOnShutdown = scoredSpaces.map((space: ParkingSpace, idx) => {
+        return setTimeout(() => {
 
           const score = space.scoreData.score;
 

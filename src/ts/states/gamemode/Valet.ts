@@ -23,6 +23,8 @@ export abstract class Valet extends GameMode {
   protected carsLeft: number;
   protected scoreTexts: Phaser.Text[] = [];
 
+  protected clearIntervalsOnShutdown = [];
+
   init() {
     super.init();
 
@@ -96,6 +98,8 @@ export abstract class Valet extends GameMode {
     if(this.finalText) this.finalText.destroy();
 
     this.scoreTexts.forEach(text => text.destroy());
+
+    this.clearIntervalsOnShutdown.forEach(ivl => clearTimeout(ivl));
   }
 
   private haltCurrentCars() {
