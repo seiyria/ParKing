@@ -31,7 +31,6 @@ export abstract class GameMode extends PausableMenu {
 
   private physicsCars: Phaser.Physics.P2.CollisionGroup;
   private physicsWalls: Phaser.Physics.P2.CollisionGroup;
-  private physicsSpaces: Phaser.Physics.P2.CollisionGroup;
 
   private isDebug: boolean;
 
@@ -188,7 +187,6 @@ export abstract class GameMode extends PausableMenu {
   private createPhysicsGroups() {
     this.physicsCars = this.game.physics.p2.createCollisionGroup();
     this.physicsWalls = this.game.physics.p2.createCollisionGroup();
-    this.physicsSpaces = this.game.physics.p2.createCollisionGroup();
   }
 
   private fixParkingSpaces() {
@@ -268,9 +266,8 @@ export abstract class GameMode extends PausableMenu {
 
     car.body.setCollisionGroup(this.physicsCars);
 
-    car.body.collides(this.physicsCars, () => car.handleCarCollision());
-    car.body.collides(this.physicsWalls, () => car.handleWallCollision());
-    car.body.collides([this.physicsSpaces]);
+    car.body.collides(this.physicsCars, () => car.handleCollision());
+    car.body.collides(this.physicsWalls, () => car.handleCollision());
 
     car.create({ myPlayer: playerIdx, thrust: decidedVelX, isDebug: this.isDebug });
     car.gameid = this.lastCarId++;

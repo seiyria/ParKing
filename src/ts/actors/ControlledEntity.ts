@@ -124,14 +124,7 @@ export abstract class ControlledEntity extends Entity {
     });
   }
 
-  public handleCarCollision() {
-    if(this.isHalted) return;
-
-    this.loseThrust(20);
-    GameState.screenShake(3, 5);
-  }
-
-  public handleWallCollision() {
+  public handleCollision() {
     if(this.isHalted) return;
 
     // hitting a wall on a right angle = reverse thrust. otherwise you just graze it and lose thrust.
