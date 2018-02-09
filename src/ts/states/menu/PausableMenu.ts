@@ -59,6 +59,7 @@ export abstract class PausableMenu extends Menu {
   protected repositionTitleText() {
     super.repositionTitleText();
     this.transparentSprite.width = window.innerWidth;
+    this.transparentSprite.height = window.innerHeight;
     this.titleText.setText(`Paused (P${this.menuControlPlayer + 1 || '?'})`);
   }
 
