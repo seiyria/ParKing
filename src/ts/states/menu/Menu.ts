@@ -50,7 +50,7 @@ export abstract class Menu extends Phaser.State {
   }
 
   protected get widthScaler(): number {
-    return this.game.world.width;
+    return window.innerWidth;
   }
 
   constructor(opts) {
@@ -62,11 +62,6 @@ export abstract class Menu extends Phaser.State {
     this.menuItems = this.game.add.group();
 
     this.initKeyHandler();
-
-    const manualUpdate = () => {
-      this.repositionTitleText();
-      this.repositionPointer();
-    };
 
     this.watchForKey('Down', { player: this.menuControlPlayer }, () => {
       this.selectedOption++;

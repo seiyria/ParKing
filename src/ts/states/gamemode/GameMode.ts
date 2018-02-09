@@ -78,6 +78,7 @@ export abstract class GameMode extends PausableMenu {
 
   shutdown() {
     GameState.resetGame();
+    this.game.scale.setResizeCallback(() => {}, null);
 
     this.groupContainer.destroy();
   }
@@ -115,6 +116,13 @@ export abstract class GameMode extends PausableMenu {
       tile.setCollisionGroup(this.physicsWalls);
       tile.collides(this.physicsCars);
     });
+
+    this.game.scale.setResizeCallback(() => {
+      this.repositionTitleText();
+      [baseLayer, wallLayer, this.groupContainer].forEach(cont => {
+        cont.scale.set(this.scaleX, this.scaleY);
+      });
+    }, null);
   }
 
   private createAllFromObjects() {
