@@ -98,7 +98,7 @@ export abstract class ControlledEntity extends Entity {
 
     this.updateWheelAngles(dampenedAngle / 2);
 
-    this.body.moveForward(this.thrust);
+    this.body.thrust(this.thrust);
 
     if(this.inputHandler.isDown('Brake', this.myPlayer)) {
       this.loseThrust(this.manualBrakeForce);

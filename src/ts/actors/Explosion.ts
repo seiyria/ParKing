@@ -5,9 +5,8 @@ import { GameState } from '../global/gamestate';
 
 export class Explosion extends Entity {
 
-  constructor(game, x, y, private force: number, private radius: number) {
-    super(game, x, y);
-  }
+  private force: number;
+  private radius: number;
     /*
     const circle = new p2.Circle({ radius: this.radius });
     circle.collisionGroup = ConfigManager.collisionMasks.BOMB;
