@@ -6,6 +6,8 @@ import { GameState } from '../global/gamestate';
 
 // TODO tire tracks: https://jsfiddle.net/jolmos/yeL4Lbdh/
 
+const MIN_TURN_WHEEL_PERCENT = 0.05;
+
 export abstract class ControlledEntity extends Entity {
 
   public gameid: number;
@@ -21,7 +23,6 @@ export abstract class ControlledEntity extends Entity {
   protected thrust: number;
   protected brakeForce: number;
   protected manualBrakeForce: number;
-  protected brakeHold: number;
   protected turnAngle: number;
   protected mass: number;
   protected damping: number;
@@ -32,6 +33,8 @@ export abstract class ControlledEntity extends Entity {
 
   private isHalted: boolean;
   private inputHandler: InstantInputHandler;
+
+  private collisionIFrames = 0;
 
   create(opts) {
     super.create(opts);
@@ -46,11 +49,10 @@ export abstract class ControlledEntity extends Entity {
       [(this.width / 2)     , (this.height / 2) - 7]
     ];
 
-    if(!this.thrust)              this.thrust = 300;
-    if(!this.brakeForce)          this.brakeForce = 2;
+    if(!this.thrust)              this.thrust = 400;
+    if(!this.brakeForce)          this.brakeForce = 0.5;
     if(!this.manualBrakeForce)    this.manualBrakeForce = 30;
-    if(!this.brakeHold)           this.brakeHold = 10;
-    if(!this.turnAngle)           this.turnAngle = 60;
+    if(!this.turnAngle)           this.turnAngle = 70;
     if(!this.reverseThrustMod)    this.reverseThrustMod = 4;
     if(!this.thrustLossMult)      this.thrustLossMult = 0.3;
 
@@ -73,6 +75,7 @@ export abstract class ControlledEntity extends Entity {
   }
 
   update() {
+    this.collisionIFrames--;
     if(this.isHalted) return;
 
     const left = this.inputHandler.isDown('SteerLeft', this.myPlayer);
@@ -104,9 +107,10 @@ export abstract class ControlledEntity extends Entity {
       this.loseThrust(this.manualBrakeForce);
     }
 
+    const isTurning = this.inputHandler.isDown('SteerLeft', this.myPlayer) || this.inputHandler.isDown('SteerRight', this.myPlayer);
     // lose way more thrust while turning
-    let thrustLoss = this.brakeForce / this.brakeHold;
-    if(this.angle !== 0) thrustLoss *= 3;
+    let thrustLoss = this.brakeForce;
+    if(isTurning) thrustLoss *= 3;
 
     this.loseThrust(thrustLoss);
 
@@ -115,7 +119,7 @@ export abstract class ControlledEntity extends Entity {
 
   private dampenAngleBasedOnThrust(angle: number): number {
     if(this.isHalted) return 0;
-    let calcAngle = angle * Math.max(0.15, (Math.abs(this.thrust) / this.baseThrust));
+    let calcAngle = angle * Math.max(MIN_TURN_WHEEL_PERCENT, (Math.abs(this.thrust) / this.baseThrust));
     if(this.thrust < 0) calcAngle *= -1;
     return calcAngle;
   }
@@ -141,6 +145,14 @@ export abstract class ControlledEntity extends Entity {
       this.reverseThrust();
       GameState.screenShake(5, 5);
     }
+  }
+
+  public handleWallCollision() {
+    if(this.collisionIFrames > 0) return;
+
+    this.collisionIFrames = 10;
+    this.handleCollision();
+
   }
 
   private reverseThrust() {

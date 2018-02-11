@@ -14,7 +14,7 @@ const MAP_GIDS = {
 
 const TILE_WIDTH = 32;
 
-const GOOD_PARKING_ANGLE_DIFF = 20;   // angle +- difference you can have to park in a spot
+const GOOD_PARKING_ANGLE_DIFF = 45;   // angle +- difference you can have to park in a spot
 const PARKING_TOLERANCE = 16;         // tolerance of your car center from the parking spot center (in px)
 
 export abstract class GameMode extends PausableMenu {
@@ -267,7 +267,7 @@ export abstract class GameMode extends PausableMenu {
     car.body.setCollisionGroup(this.physicsCars);
 
     car.body.collides(this.physicsCars, () => car.handleCollision());
-    car.body.collides(this.physicsWalls, () => car.handleCollision());
+    car.body.collides(this.physicsWalls, () => car.handleWallCollision());
 
     car.create({ myPlayer: playerIdx, thrust: decidedVelX, isDebug: this.isDebug });
     car.gameid = this.lastCarId++;
@@ -326,8 +326,8 @@ export abstract class GameMode extends PausableMenu {
         let spaceAngle = Math.abs(space.angle) % 180;
         let carAngle = Math.abs(car.angle) % 180;
 
-        if(spaceAngle > 90) spaceAngle -= 180;
-        if(carAngle > 90)   carAngle -= 180;
+        if(spaceAngle > 90) spaceAngle = Math.abs(spaceAngle - 180);
+        if(carAngle > 90)   carAngle = Math.abs(carAngle - 180);
 
         // if your car isn't parked within 10 degrees of the parking space, then you suck at parking
         if(carAngle - GOOD_PARKING_ANGLE_DIFF > spaceAngle || carAngle + GOOD_PARKING_ANGLE_DIFF < spaceAngle) return;
