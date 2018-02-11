@@ -18,26 +18,14 @@ export class GameModeMenu extends Menu {
     'Try to get under par while par king your cars! [not yet implemented]'
   ];
 
+  protected scoreText: Phaser.Text;
+
   protected menuDescText: Phaser.Text;
   protected menuLeftArrow: Phaser.Text;
   protected menuRightArrow: Phaser.Text;
 
   constructor() {
     super({ menuVerticalOffset: 300, menuOptionSpacing: 100, menuAlign: 'center' });
-  }
-
-  private goLeft() {
-    this.selectedMenu--;
-    if(this.selectedMenu < 0) this.selectedMenu = this.options.length - 1;
-    ConfigManager.setGameMenu(this.selectedMenu);
-    this.recalculateVisibleOptions();
-  }
-
-  private goRight() {
-    this.selectedMenu++;
-    if(this.selectedMenu >= this.options.length) this.selectedMenu = 0;
-    ConfigManager.setGameMenu(this.selectedMenu);
-    this.recalculateVisibleOptions();
   }
 
   public init(): void {
@@ -108,6 +96,11 @@ export class GameModeMenu extends Menu {
 
     this.menuLeftArrow.events.onInputDown.add(() => this.goLeft());
     this.menuRightArrow.events.onInputDown.add(() => this.goRight());
+
+    const scoreOpts = Helpers.defaultTextOptions();
+    scoreOpts.fontSize = 16;
+    this.scoreText = this.game.add.text(0, 350, '', scoreOpts);
+    this.scoreText.angle = -20;
   }
 
   update() {
@@ -118,12 +111,39 @@ export class GameModeMenu extends Menu {
 
     this.menuLeftArrow.position.x = this.widthScaler * 1 / 8;
     this.menuRightArrow.position.x = this.widthScaler * 7 / 8;
+
+    this.scoreText.x = this.widthScaler * 1 / 6;
+
+    this.updateScoreText();
   }
 
   shutdown() {
     super.shutdown();
 
     this.menuDescText.destroy();
+  }
+
+  private goLeft() {
+    this.selectedMenu--;
+    if(this.selectedMenu < 0) this.selectedMenu = this.options.length - 1;
+    ConfigManager.setGameMenu(this.selectedMenu);
+    this.recalculateVisibleOptions();
+  }
+
+  private goRight() {
+    this.selectedMenu++;
+    if(this.selectedMenu >= this.options.length) this.selectedMenu = 0;
+    ConfigManager.setGameMenu(this.selectedMenu);
+    this.recalculateVisibleOptions();
+  }
+
+  private updateScoreText() {
+    let score = -1;
+    if(this.selectedMenu === PARKING_1P_MENU) score = ConfigManager.singlePlayerHighScore;
+
+    this.scoreText.visible = score >= 0;
+
+    this.scoreText.setText(`High Score: ${score}`);
   }
 
 }

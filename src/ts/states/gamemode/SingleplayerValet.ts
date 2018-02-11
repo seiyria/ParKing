@@ -3,6 +3,7 @@ import { Valet } from './Valet';
 import { ParkingSpace } from '../../actors/ParkingSpace';
 import { GameState } from '../../global/gamestate';
 import { Coin } from '../../actors/Coin';
+import { ConfigManager } from '../../global/config';
 
 export class SingleplayerValet extends Valet {
   protected possibleMaps = ['BasicSingleplayer'];
@@ -62,7 +63,7 @@ export class SingleplayerValet extends Valet {
     if(score > 150)   message = 'Excellent job!';
     if(score > 200)   message = 'Basically perfect!';
 
-    // TODO update high score
+    ConfigManager.setSinglePlayerHighScore(score);
 
     this.showFinishMessage(message);
   }

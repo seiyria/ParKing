@@ -10,6 +10,8 @@ class UserOptions {
   screenShake = 1;
   masterVolume = 1;
   gameMenu = 0;
+
+  singlePlayerHighScore = 0;
 }
 
 export class ConfigManager {
@@ -60,6 +62,10 @@ export class ConfigManager {
     return this.formatOptionText('Screen Shake', str, val !== 0, val !== 200);
   }
 
+  public static get singlePlayerHighScore(): number {
+    return this._options.singlePlayerHighScore || 0;
+  }
+
   public static init() {
     if(ConfigManager._options) throw new Error('Cannot re-init Config');
     ConfigManager._options = new UserOptions();
@@ -78,6 +84,10 @@ export class ConfigManager {
         let clamped = _.clamp(val, 0, 2);
         if(_.isNaN(clamped)) clamped = 1;
         return clamped;
+      }
+
+      case 'singlePlayerHighScore': {
+        return Math.max(0, val);
       }
     }
 
@@ -121,6 +131,10 @@ export class ConfigManager {
 
   public static setGameMenu(menu: number): number {
     return ConfigManager.setOption('gameMenu', menu);
+  }
+
+  public static setSinglePlayerHighScore(score: number): number {
+    return ConfigManager.setOption('singlePlayerHighScore', score);
   }
 
 }
