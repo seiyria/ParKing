@@ -35,6 +35,7 @@ export abstract class Valet extends GameMode {
 
     GameState.allPlayers.forEach(playerId => {
       this.scoreTexts[playerId] = this.game.add.text(10, 50 * (playerId + 1), 'Score: $0', Helpers.defaultTextOptions());
+      this.scoreTexts[playerId].visible = false;
       this.gameUI.add(this.scoreTexts[playerId]);
     });
 
@@ -171,6 +172,7 @@ export abstract class Valet extends GameMode {
     GameState.setPlayerScore(player, score);
 
     this.scoreTexts[player].setText(`Score: $${score}`);
+    this.scoreTexts[player].visible = score > 0;
   };
 
 }
