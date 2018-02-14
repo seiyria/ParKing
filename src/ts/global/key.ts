@@ -29,33 +29,33 @@ KeyToPhaserKey.SteerLeft = KeyToPhaserKey.Left;
 KeyToPhaserKey.SteerRight = KeyToPhaserKey.Right;
 
 const KeyToGamepad = {
-  Up: (gamepad: Phaser.Gamepad): boolean => {
+  Up: (gamepad: Phaser.SinglePad): boolean => {
     return gamepad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP)
-      || (<any>gamepad).axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) <= -0.1;
+      || gamepad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) <= -0.1;
   },
-  Down: (gamepad: Phaser.Gamepad): boolean => {
+  Down: (gamepad: Phaser.SinglePad): boolean => {
     return gamepad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN)
-        || (<any>gamepad).axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) >= 0.1;
+        || gamepad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) >= 0.1;
   },
-  Left: (gamepad: Phaser.Gamepad): boolean => {
+  Left: (gamepad: Phaser.SinglePad): boolean => {
     return gamepad.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT)
-      || (<any>gamepad).axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) <= -0.1;
+      || gamepad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) <= -0.1;
   },
-  Right: (gamepad: Phaser.Gamepad): boolean => {
+  Right: (gamepad: Phaser.SinglePad): boolean => {
     return gamepad.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT)
-      || (<any>gamepad).axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) >= 0.1;
+      || gamepad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) >= 0.1;
   },
 
-  Confirm: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_A),
-  Back: (gamepad: Phaser.Gamepad): boolean => {
+  Confirm: (gamepad: Phaser.SinglePad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_A),
+  Back: (gamepad: Phaser.SinglePad): boolean => {
     return gamepad.isDown(Phaser.Gamepad.XBOX360_B) || gamepad.isDown(Phaser.Gamepad.XBOX360_BACK);
   },
-  Pause: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_START),
-  Debug: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
+  Pause: (gamepad: Phaser.SinglePad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_START),
+  Debug: (gamepad: Phaser.SinglePad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
 
-  Brake: (gamepad: Phaser.Gamepad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_X),
-  SteerLeft: (gamepad: Phaser.Gamepad): boolean => false,
-  SteerRight: (gamepad: Phaser.Gamepad): boolean => false
+  Brake: (gamepad: Phaser.SinglePad): boolean => gamepad.isDown(Phaser.Gamepad.XBOX360_X),
+  SteerLeft: (gamepad: Phaser.SinglePad): boolean => false,
+  SteerRight: (gamepad: Phaser.SinglePad): boolean => false
 };
 
 KeyToGamepad.SteerLeft = KeyToGamepad.Left;
